@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ignore big datasets for sync
+COLLAB/
+REDDITMULTI5K/
+REDDITBINARY/
