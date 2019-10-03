@@ -5,6 +5,7 @@ channels:
   - pkgw-forge
   - defaults
 dependencies:
+  - _pytorch_select=0.2=gpu_0
   - at-spi2-atk=2.25.3=0
   - at-spi2-core=2.25.92=0
   - atk=2.25.90=hb9387b2_1
@@ -14,11 +15,14 @@ dependencies:
   - boost=1.66.0=py36_1
   - boost-cpp=1.66.0=1
   - bzip2=1.0.6=h14c3975_5
-  - ca-certificates=2018.03.07=0
+  - ca-certificates=2019.8.28=0
   - cairo=1.14.10=0
   - cairomm=1.12.2=0
-  - certifi=2018.8.24=py36_1
+  - certifi=2019.9.11=py36_0
+  - cffi=1.12.3=py36h2e261b9_0
   - cgal=4.12=py36_0
+  - cudatoolkit=10.0.130=0
+  - cudnn=7.6.0=cuda10.0_0
   - cycler=0.10.0=py36_0
   - dbus=1.10.22=0
   - decorator=4.3.0=py36_0
@@ -72,17 +76,20 @@ dependencies:
   - markupsafe=1.0=py36h14c3975_1
   - matplotlib=2.2.2=py36h0e671d2_0
   - mistune=0.8.3=py36h14c3975_1
-  - mkl=2019.0=118
+  - mkl=2019.4=243
+  - mkl-service=2.3.0=py36he904b0f_0
   - mkl_fft=1.0.6=py36h7dd41cf_0
   - mkl_random=1.0.1=py36h4414c95_1
   - mpfr=4.0.1=hdf1c602_3
   - nbconvert=5.3.1=py36_0
   - nbformat=4.4.0=py36_0
   - ncurses=6.1=hf484d3e_0
+  - networkx=2.3=py_0
+  - ninja=1.9.0=py36hfd86e86_0
   - notebook=5.7.0=py36_0
   - numpy=1.15.2=py36h1d66e8a_1
   - numpy-base=1.15.2=py36h81de0dd_1
-  - openssl=1.0.2p=h14c3975_0
+  - openssl=1.0.2t=h7b6447c_1
   - pandas=0.23.4=py36h04863e7_0
   - pandoc=2.2.3.2=0
   - pandocfilters=1.4.2=py36_1
@@ -96,12 +103,14 @@ dependencies:
   - prompt_toolkit=2.0.5=py36_0
   - ptyprocess=0.6.0=py36_0
   - pycairo=1.13.3=py36h8764da6_1
+  - pycparser=2.19=py36_0
   - pygments=2.2.0=py36_0
   - pygobject=3.28.2=py36_0
   - pyparsing=2.2.2=py36_0
   - pyqt=5.6.0=py36h22d08a2_6
   - python=3.6.6=h6e4f718_2
   - python-dateutil=2.7.3=py36_0
+  - pytorch=1.2.0=cuda100py36h938c94c_0
   - pytz=2018.5=py36_0
   - pyzmq=17.1.2=py36h14c3975_0
   - qt=5.6.2=h974d657_12
