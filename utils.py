@@ -2,20 +2,39 @@ import networkx as nx
 import numpy as np
 import random
 import torch
+import os
+
 from sklearn.model_selection import StratifiedKFold
 
 try:
-    from graph_tool.all import Graph
+    from graph_tool.all import Graph as gtGraph
 except:
     print("Please install graph-tool to run subgraph density. "\
           "Only pre-computed vectors are available without graph-tool")
 
+try:
+    from homlib import hlGraph
+except:
+    print("Please install homlib graph library for fast tree homomorphism.")
+
 
 def nx2gt(nxg):
     """Simple function to convert s2v to graph-tool graph."""
-    gt = Graph(directed=nxg.is_directed())
+    gt = gtGraph(directed=nxg.is_directed())
     gt.add_edge_list(nxg.edges())
-    return gt 
+    return gt
+
+
+def nx2homg(nxg):
+    """Convert nx graph to homlib graph format. Only 
+    undirected graphs are supported. 
+    originally suggested by Takanori Maehara (@spagetti-source)"""
+    n = nxg.number_of_nodes()
+    G = hlGraph(n)
+    for (u, v) in nxg.edges():
+        G.addEdge(u,v)
+    return G
+
 
 
 ##############################################################
@@ -33,7 +52,8 @@ def load_data(dataset, degree_as_tag):
     label_dict = {}
     feat_dict = {}
 
-    with open('data/{}/{}.txt'.format(dataset,dataset), 'r') as f:
+    dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
+    with open('{}/{}/{}.txt'.format(dataf,dataset,dataset), 'r') as f:
         n_g = int(f.readline().strip())
         for i in range(n_g):
             row = f.readline().strip().split()
