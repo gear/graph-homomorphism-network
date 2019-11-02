@@ -13,7 +13,7 @@ except:
           "Only pre-computed vectors are available without graph-tool")
 
 try:
-    from homlib import hlGraph
+    from homlib import Graph as hlGraph
 except:
     print("Please install homlib graph library for fast tree homomorphism.")
 
