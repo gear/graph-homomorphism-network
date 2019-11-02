@@ -107,3 +107,6 @@ venv.bak/
 COLLAB/
 REDDITMULTI5K/
 REDDITBINARY/
+
+# cpp binary file
+*.out
