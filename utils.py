@@ -36,6 +36,34 @@ def nx2homg(nxg):
     return G
 
 
+def tree_list(size=6, to_homlib=True):
+    """Generate nonisomorphic trees up to size `size`."""
+    t_list = [tree for i in range(2,size+1) for tree in \
+                       nx.generators.nonisomorphic_trees(i)]
+    if to_homlib:
+        t_list = [nx2homg(t) for t in t_list]
+    return t_list
+
+
+def cycle_list(size=6, to_homlib=True):
+    """Generate undirected cycles up to size `size`. Parallel
+    edges are not allowed."""
+    c_list = [cycle for i in range(2,size+1) for cycles in \
+                        nx.generators.cycle_graph(i)]
+    if to_homlib:
+        c_list = [nx2homg(c) for c in c_list]
+    return c_list
+
+
+def edge_list(size=6, to_homlib=True):
+    """Generate undirected paths up to size `size`. Parallel
+    edges are not allowed."""
+    p_list = [path for i in range(2,size+1) for paths in \
+                        nx.generators.path_graph(i)]
+    if to_homlib:
+        p_list = [nx2homg(p) for p in p_list]
+    return p_list
+
 
 ##############################################################
 ### Copied from https://github.com/weihua916/powerful-gnns ###
@@ -46,7 +74,6 @@ def load_data(dataset, degree_as_tag):
         test_proportion: ratio of test train split
         seed: random seed for random splitting of dataset
     '''
-
     print('loading data')
     g_list = []
     label_dict = {}
@@ -179,3 +206,6 @@ class S2VGraph(object):
         self.edge_mat = 0
 
         self.max_neighbor = 0
+##############################################################
+##############################################################
+##############################################################
