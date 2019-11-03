@@ -58,6 +58,13 @@ def cycle_profile(G, size=6):
     """Run tree homomorphism profile for a single graph G."""
     c_list = cycle_list(6, to_homlib=True)
     return [hom(c, G) for c in c_list]
+
+
+def tree_path_profile(G, size=6):
+    """Run profile for both tree and path."""
+    tree_pf = tree_profile(G, size)
+    path_pf = path_profile(G, size)
+    return tree_pf + path_pf
     
 
 def get_hom_profile(f_str):
@@ -67,5 +74,7 @@ def get_hom_profile(f_str):
         return path_profile
     elif f_str == "cycle":
         return cycle_profile
+    elif f_str == "tree+path":
+        return tree_path_profile
     else:
         raise ValueError("{} is not a valid F class.".format(f_str))
