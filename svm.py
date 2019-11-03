@@ -31,6 +31,7 @@ parser.add_argument("--gamma", type=float, help="SVC's gamma parameter.",
 # Misc
 parser.add_argument("--num_run", type=int, default=10,
                     help="Number of experiments to run.")
+parser.add_argument("--seed", type=int, default=42)
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -43,6 +44,11 @@ if __name__ == "__main__":
     data, nclass = load_data(args.dataset, False)
     X = []
     y = []
+    node_features = None
+    if hasattr(data[0], 'node_features'):
+        node_features = [d.node_features.sum(0).numpy() for d in data]
+        node_features = np.array(node_features)
+        dim_features = node_features.shape[1]
     # Compute (single type) homomorphism profile
     if args.precomputed is not None:
         X = load_precompute(args.precomputed)
@@ -55,6 +61,12 @@ if __name__ == "__main__":
             X.append(profile)
             y.append(d.label)
         hom_time = time() - hom_time
+    X = np.array(X, dtype=float)
+    y = np.array(y)
+    dim_hom = X.shape[1]
+    if args.feature == "append" and node_features is not None:
+        print("Appending features...")
+        X = np.concatenate((X, node_features), axis=1)
     # Train SVC 
     print("Training SVM...")
     svm_time = time()
@@ -68,7 +80,8 @@ if __name__ == "__main__":
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
         clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
-                  gamma=args.gamma, decision_function_shape='ovr')
+                  gamma=args.gamma, decision_function_shape='ovr',
+                  random_state=np.random.randint(69,6969))
         clf.fit(X_train, y_train)
         f1_micro = f1_score(y_pred=clf.predict(X_test), y_true=y_test, 
                             average="micro")
