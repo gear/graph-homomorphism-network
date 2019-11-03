@@ -108,3 +108,6 @@ COLLAB/
 
 # cpp binary file
 *.out
+
+# ds_store
+.DS_STORE/
