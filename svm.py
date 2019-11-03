@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from utils import load_data, load_precompute, save_precompute
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
@@ -32,6 +32,13 @@ parser.add_argument("--gamma", type=float, help="SVC's gamma parameter.",
 parser.add_argument("--num_run", type=int, default=10,
                     help="Number of experiments to run.")
 parser.add_argument("--seed", type=int, default=42)
+parser.add_argument("--grid_search", action="store_true", default=False)
+parser.add_argument("--gs_nfolds", type=int, default=5)
+
+# Default grid for SVC
+Cs = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+gammas = [0.001, 0.01, 0.1, 1.0, 10.0]
+param_grid = {'C': Cs, 'gamma': gammas}
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -72,6 +79,12 @@ if __name__ == "__main__":
     if args.feature == "append" and node_features is not None:
         print("Appending features...")
         X = np.concatenate((X, node_features), axis=1)
+    # Grid search SVC
+    if args.grid_search:
+        grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
+                                   iid=False, cv=args.gs_nfolds, n_jobs=4)
+        grid_search.fit(X,y)
+        print(grid_search.best_params_)
     # Train SVC 
     print("Training SVM...")
     svm_time = time()
@@ -84,9 +97,12 @@ if __name__ == "__main__":
         scaler = StandardScaler().fit(X_train)
         X_train = scaler.transform(X_train)
         X_test = scaler.transform(X_test)
-        clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
-                  gamma=args.gamma, decision_function_shape='ovr',
-                  random_state=np.random.randint(69,6969))
+        if args.grid_search:
+            clf = SVC(**grid_search.best_params_)
+        else:
+            clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
+                      gamma=args.gamma, decision_function_shape='ovr',
+                      random_state=np.random.randint(69,6969))
         clf.fit(X_train, y_train)
         f1_micro = f1_score(y_pred=clf.predict(X_test), y_true=y_test, 
                             average="micro")
