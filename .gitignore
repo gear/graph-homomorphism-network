@@ -105,8 +105,6 @@ venv.bak/
 
 # ignore big datasets for sync
 COLLAB/
-REDDITMULTI5K/
-REDDITBINARY/
 
 # cpp binary file
 *.out
