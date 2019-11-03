@@ -18,6 +18,10 @@ except:
     print("Please install homlib graph library for fast tree homomorphism.")
 
 
+def load_precompute(*args):
+    pass
+
+
 def nx2gt(nxg):
     """Simple function to convert s2v to graph-tool graph."""
     gt = gtGraph(directed=nxg.is_directed())
@@ -48,22 +52,29 @@ def tree_list(size=6, to_homlib=True):
 def cycle_list(size=6, to_homlib=True):
     """Generate undirected cycles up to size `size`. Parallel
     edges are not allowed."""
-    c_list = [cycle for i in range(2,size+1) for cycles in \
-                        nx.generators.cycle_graph(i)]
+    c_list = [nx.generators.cycle_graph(i) for i in range(2,size+1)]
     if to_homlib:
         c_list = [nx2homg(c) for c in c_list]
     return c_list
 
 
-def edge_list(size=6, to_homlib=True):
+def path_list(size=6, to_homlib=True):
     """Generate undirected paths up to size `size`. Parallel
     edges are not allowed."""
-    p_list = [path for i in range(2,size+1) for paths in \
-                        nx.generators.path_graph(i)]
+    p_list = [nx.generators.path_graph(i) for i in range(2,size+1)]
     if to_homlib:
         p_list = [nx2homg(p) for p in p_list]
     return p_list
 
+
+def graph_type(g):
+    if g.__module__ == 'homlib':
+        return 'hl'
+    elif g.__module__ == 'networkx.classes.graph':
+        return 'nx'
+    else:
+        raise TypeError("Unsupported graph type: {}".format(str(g)))
+    #TODO(N): Add for graph-tool type if needed.
 
 ##############################################################
 ### Copied from https://github.com/weihua916/powerful-gnns ###
