@@ -1,5 +1,6 @@
 # graph homomorphism profile
-Proof of concept for graph homomorphism profile as feature
+Proof of concept for graph homomorphism profile as feature.
+@maehara-san: The name of this repo is due to the simple proof paper, when we called it "network".
 
 To run experiments, install required packages, then:
 
