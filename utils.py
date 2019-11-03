@@ -1,3 +1,4 @@
+import pickle as pkl
 import networkx as nx
 import numpy as np
 import random
@@ -18,9 +19,25 @@ except:
     print("Please install homlib graph library for fast tree homomorphism.")
 
 
-def load_precompute(*args):
-    pass
+def save_precompute(X, dataset, hom_type, hom_size):
+    dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
+    tmp_str = "{}/{}/{}_{}_{}.pkl"
+    with open(tmp_str.format(dataf,dataset,dataset,hom_type,hom_size), 
+              'wb') as f:
+        pkl.dump(X, f)
 
+
+def load_precompute(dataset, hom_type, hom_size):
+    dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
+    tmp_str = "{}/{}/{}_{}_{}.pkl"
+    try:
+        with open(tmp_str.format(dataf,dataset,dataset,hom_type,hom_size), 
+                  'rb') as f:
+            X = pkl.load(f)
+    except:
+        X = []
+    return X
+    
 
 def nx2gt(nxg):
     """Simple function to convert s2v to graph-tool graph."""

@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
-from utils import load_data, load_precompute
+from utils import load_data, load_precompute, save_precompute
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score, accuracy_score
@@ -16,8 +16,8 @@ parser.add_argument("--hom_type", type=str, help="Type of homomorphism.")
 parser.add_argument("--hom_size", type=int, default=6,
                     help="Max size of F graph.")
 parser.add_argument("--test_ratio", type=float, help="Test split.", default=0.1)
-parser.add_argument("--precomputed", type=str, 
-                    help="Precomputed homomorphism count.", default=None)
+parser.add_argument("--precompute", action="store_true", default=False, 
+                    help="Precomputed homomorphism count.")
 parser.add_argument("--feature", type=str, default="skip",
                     help="How to handle node feature. [skip or append].")
 # Hyperparams for SVM
@@ -43,26 +43,31 @@ if __name__ == "__main__":
     # Load data
     data, nclass = load_data(args.dataset, False)
     X = []
-    y = []
+    y = [d.label for d in data]
+    y = np.array(y)
     node_features = None
+    compute_X = False
     if hasattr(data[0], 'node_features'):
         node_features = [d.node_features.sum(0).numpy() for d in data]
         node_features = np.array(node_features)
         dim_features = node_features.shape[1]
     # Compute (single type) homomorphism profile
-    if args.precomputed is not None:
-        X = load_precompute(args.precomputed)
-    else:
+    if args.precompute:
+        X = load_precompute(args.dataset, args.hom_type, args.hom_size)
+    # If X is [] 
+    if len(X) == 0:
+        compute_X = True
         hom_time = time()
         profile_func = get_hom_profile(args.hom_type)
         print("Computing {} homomorphism...".format(args.hom_type))
         for d in tqdm(data):
             profile = profile_func(d.g, size=args.hom_size)
             X.append(profile)
-            y.append(d.label)
         hom_time = time() - hom_time
     X = np.array(X, dtype=float)
-    y = np.array(y)
+    # Save homomorphism profile if precompute flag is set and X is computed
+    if args.precompute and compute_X:
+        save_precompute(X, args.dataset, args.hom_type, args.hom_size)
     dim_hom = X.shape[1]
     if args.feature == "append" and node_features is not None:
         print("Appending features...")
