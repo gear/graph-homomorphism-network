@@ -48,7 +48,7 @@ if __name__ == "__main__":
     f1_mac = []
     accuracy = [] 
     # Load data
-    data, nclass = load_data(args.dataset, False)
+    data, nclass = load_data(args.dataset, True)
     X = []
     y = [d.label for d in data]
     y = np.array(y)
