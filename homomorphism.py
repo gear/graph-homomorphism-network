@@ -23,47 +23,51 @@ def hom_tree(F, G):
     return np.sum(hom_r)
 
 
-def hom(F, G, f_is_tree=False):
+def hom(F, G, f_is_tree=False, density=False):
     """Wrapper for the `hom` function in `homlib`
     (https://github.com/spaghetti-source/homlib). 
     If `f_is_tree`, then use the Python implementation of tree. This one is 
     10 times slower than homlib but can be parallelize with `multiprocessing`.
     """
+    assert graph_type(G) == "nx" and graph_type(F) == "nx", "Invalid type."
     # Default homomorphism function
     hom_func = hl.hom
     # Check if tree, then change the hom function
     if f_is_tree:
         hom_func = hom_tree
     # Check and convert graph type
-    if graph_type(F) == "nx" and not f_is_tree:
+    if density:
+        scaler = 1.0 / (G.number_of_nodes() ** F.number_of_nodes())
+    else:
+        scaler = 1.0
+    if not f_is_tree:
         F = nx2homg(F)
-    if graph_type(G) == "nx" and not f_is_tree:
         G = nx2homg(G)
-    return hom_func(F, G) 
+    return hom_func(F, G) * scaler
 
 
-def tree_profile(G, size=6):
+def tree_profile(G, size=6, density=False):
     """Run tree homomorphism profile for a single graph G."""
-    t_list = tree_list(6, to_homlib=True)
-    return [hom(t, G) for t in t_list]
+    t_list = tree_list(size, to_homlib=False)
+    return [hom(t, G, density) for t in t_list]
 
 
-def path_profile(G, size=6):
+def path_profile(G, size=6, density=False):
     """Run tree homomorphism profile for a single graph G."""
-    p_list = path_list(6, to_homlib=True)
-    return [hom(p, G) for p in p_list]
+    p_list = path_list(size, to_homlib=False)
+    return [hom(p, G, density) for p in p_list]
 
 
-def cycle_profile(G, size=6):
+def cycle_profile(G, size=6, density=False):
     """Run tree homomorphism profile for a single graph G."""
-    c_list = cycle_list(6, to_homlib=True)
-    return [hom(c, G) for c in c_list]
+    c_list = cycle_list(size, to_homlib=False)
+    return [hom(c, G, density) for c in c_list]
 
 
-def tree_path_profile(G, size=6):
+def tree_path_profile(G, size=6, density=False):
     """Run profile for both tree and path."""
-    tree_pf = tree_profile(G, size)
-    path_pf = path_profile(G, size)
+    tree_pf = tree_profile(G, size, density)
+    path_pf = path_profile(G, size, density)
     return tree_pf + path_pf
     
 
