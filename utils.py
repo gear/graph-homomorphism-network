@@ -57,7 +57,7 @@ def nx2homg(nxg):
     return G
 
 
-def tree_list(size=6, to_homlib=True):
+def tree_list(size=6, to_homlib=False):
     """Generate nonisomorphic trees up to size `size`."""
     t_list = [tree for i in range(2,size+1) for tree in \
                        nx.generators.nonisomorphic_trees(i)]
@@ -66,7 +66,7 @@ def tree_list(size=6, to_homlib=True):
     return t_list
 
 
-def cycle_list(size=6, to_homlib=True):
+def cycle_list(size=6, to_homlib=False):
     """Generate undirected cycles up to size `size`. Parallel
     edges are not allowed."""
     c_list = [nx.generators.cycle_graph(i) for i in range(2,size+1)]
@@ -75,7 +75,7 @@ def cycle_list(size=6, to_homlib=True):
     return c_list
 
 
-def path_list(size=6, to_homlib=True):
+def path_list(size=6, to_homlib=False):
     """Generate undirected paths up to size `size`. Parallel
     edges are not allowed."""
     p_list = [nx.generators.path_graph(i) for i in range(2,size+1)]
@@ -92,6 +92,16 @@ def graph_type(g):
     else:
         raise TypeError("Unsupported graph type: {}".format(str(g)))
     #TODO(N): Add for graph-tool type if needed.
+
+
+def load_du_data(datasset):
+    """Utility function to load other datasets for graph 
+    classification besides the one provided by GIN.
+    """
+    g_list = []
+    dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
+    # Read graph structure
+    with open('{}/{}/{}_A.txt'.format(dataf,dataset,dataset), 'r') as gf:
 
 ##############################################################
 ### Copied from https://github.com/weihua916/powerful-gnns ###
@@ -190,7 +200,6 @@ def load_data(dataset, degree_as_tag):
         g.node_features = torch.zeros(len(g.node_tags), len(tagset))
         g.node_features[range(len(g.node_tags)),\
                         [tag2index[tag] for tag in g.node_tags]] = 1
-
 
     print('# classes: %d' % len(label_dict))
     print('# maximum node tag: %d' % len(tagset))
