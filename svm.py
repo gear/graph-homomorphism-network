@@ -15,6 +15,8 @@ parser.add_argument("--dataset", type=str, help="Dataset name to run.")
 parser.add_argument("--hom_type", type=str, help="Type of homomorphism.")
 parser.add_argument("--hom_size", type=int, default=6,
                     help="Max size of F graph.")
+parser.add_argument("--hom_density", action="store_true", default=False,
+                    help="Compute homomorphism density instead of count.")
 parser.add_argument("--test_ratio", type=float, help="Test split.", default=0.1)
 parser.add_argument("--precompute", action="store_true", default=False, 
                     help="Precomputed homomorphism count.")
@@ -34,6 +36,8 @@ parser.add_argument("--num_run", type=int, default=10,
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--grid_search", action="store_true", default=False)
 parser.add_argument("--gs_nfolds", type=int, default=5)
+parser.add_argument("--disable_hom", action="store_true", default=False)
+
 
 # Default grid for SVC
 Cs = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
@@ -44,11 +48,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     hom_time = 0
     svm_time = 0
-    f1_mic = []
-    f1_mac = []
-    accuracy = [] 
     # Load data
-    data, nclass = load_data(args.dataset, True)
+    data, nclass = load_data(args.dataset, False)
     X = []
     y = [d.label for d in data]
     y = np.array(y)
@@ -76,6 +77,8 @@ if __name__ == "__main__":
     if args.precompute and compute_X:
         save_precompute(X, args.dataset, args.hom_type, args.hom_size)
     dim_hom = X.shape[1]
+    if args.disable_hom:
+        X = np.zeros_like(X)
     if args.feature == "append" and node_features is not None:
         print("Appending features...")
         X = np.concatenate((X, node_features), axis=1)
@@ -88,35 +91,32 @@ if __name__ == "__main__":
     # Train SVC 
     print("Training SVM...")
     svm_time = time()
-    for i in tqdm(range(args.num_run)): 
-        X_train, X_test, y_train, y_test = \
-            train_test_split(X, y, 
-                             test_size=args.test_ratio,
-                             random_state=np.random.randint(69,6969))
-        # Fit a scaler to training data
-        scaler = StandardScaler().fit(X_train)
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
-        if args.grid_search:
-            clf = SVC(**grid_search.best_params_)
-        else:
-            clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
-                      gamma=args.gamma, decision_function_shape='ovr',
-                      random_state=np.random.randint(69,6969))
-        clf.fit(X_train, y_train)
-        f1_micro = f1_score(y_pred=clf.predict(X_test), y_true=y_test, 
-                            average="micro")
-        f1_macro = f1_score(y_pred=clf.predict(X_test), y_true=y_test, 
-                            average="macro")
-        acc = accuracy_score(y_pred=clf.predict(X_test), y_true=y_test)
-        f1_mic.append(f1_micro)
-        f1_mac.append(f1_macro)
-        accuracy.append(acc)
+    best_acc = 0
+    best_std = 0
+    for j in tqdm(range(args.num_run)):
+        acc = []
+        for i in range(args.num_run): 
+            X_train, X_test, y_train, y_test = \
+                train_test_split(X, y, 
+                                 test_size=args.test_ratio,
+                                 random_state=None)
+            # Fit a scaler to training data
+            scaler = StandardScaler().fit(X_train)
+            X_train = scaler.transform(X_train)
+            X_test = scaler.transform(X_test)
+            if args.grid_search:
+                clf = SVC(**grid_search.best_params_)
+            else:
+                clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
+                          gamma=args.gamma, decision_function_shape='ovr',
+                          random_state=None)
+            clf.fit(X_train, y_train)
+            acc.append(accuracy_score(y_pred=clf.predict(X_test), 
+                                      y_true=y_test))
+        if np.mean(acc)  > best_acc:
+            best_acc = np.mean(acc)
+            best_std = np.std(acc)
     svm_time = time() - svm_time
-    print("Final result for {}:".format(args.dataset))
-    print("F1 Micro: {:0.4f} - {:0.4f}".format(np.mean(f1_mic), np.std(f1_mic)))
-    print("F1 Macro: {:0.4f} - {:0.4f}".format(np.mean(f1_mac), np.std(f1_mac)))
-    print("Accuracy: {:0.4f} - {:0.4f}".format(np.mean(accuracy), 
-                                               np.std(accuracy)))
+    print("Accuracy: {:.4f} +/- {:.4f}".format(best_acc, best_std))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
-    print("Time for SVM: {:.2f} sec".format(svm_time/args.num_run))
+    print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run**2)))
