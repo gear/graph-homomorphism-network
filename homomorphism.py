@@ -49,19 +49,19 @@ def hom(F, G, f_is_tree=False, density=False):
 def tree_profile(G, size=6, density=False):
     """Run tree homomorphism profile for a single graph G."""
     t_list = tree_list(size, to_homlib=False)
-    return [hom(t, G, density) for t in t_list]
+    return [hom(t, G, density=density) for t in t_list]
 
 
 def path_profile(G, size=6, density=False):
     """Run tree homomorphism profile for a single graph G."""
     p_list = path_list(size, to_homlib=False)
-    return [hom(p, G, density) for p in p_list]
+    return [hom(p, G, density=density) for p in p_list]
 
 
 def cycle_profile(G, size=6, density=False):
     """Run tree homomorphism profile for a single graph G."""
     c_list = cycle_list(size, to_homlib=False)
-    return [hom(c, G, density) for c in c_list]
+    return [hom(c, G, density=density) for c in c_list]
 
 
 def tree_path_profile(G, size=6, density=False):
