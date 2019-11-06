@@ -1,3 +1,4 @@
+from collections import Counter
 import pickle as pkl
 import networkx as nx
 import numpy as np
@@ -17,6 +18,13 @@ try:
     from homlib import Graph as hlGraph
 except:
     print("Please install homlib graph library for fast tree homomorphism.")
+
+
+def to_onehot(X):
+    """Convert a 1d numpy array to 2d one hot."""
+    oh = np.zeros((X.size, X.max()+1)) 
+    oh[np.arange(X.size), X] = 1
+    return oh
 
 
 def save_precompute(X, dataset, hom_type, hom_size):
@@ -94,14 +102,83 @@ def graph_type(g):
     #TODO(N): Add for graph-tool type if needed.
 
 
-def load_du_data(datasset):
-    """Utility function to load other datasets for graph 
-    classification besides the one provided by GIN.
+def load_tud_data(dset, combine_tag_feat=False):
+    """Utility function to load other datasets for graph
+    classification besides the one provided by GIN. These graphs
+    follow TU Dormund's format.
+    https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets
+
+    combine_tag_feat: append node tags to node features (stored in features).
     """
-    g_list = []
     dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
+    adj_file = "{}/{}/{}_A.txt".format(dataf, dset, dset)
+    indicator_file = "{}/{}/{}_graph_indicator.txt".format(dataf, dset, dset)
+    graph_label_file = "{}/{}/{}_graph_labels.txt".format(dataf, dset, dset)
+    node_label_file = "{}/{}/{}_node_labels.txt".format(dataf, dset, dset)
+    node_attr_file = "{}/{}/{}_node_attributes.txt".format(dataf, dset, dset)
+
+    # Read and convert node tags if available (i.e. node labels)
+    node_label_by_index = []
+    if os.path.exists(node_label_file):
+        node_label_to_index = dict()
+        next_index = 0
+        with open(node_label_file, 'r') as nlf:
+            for dline in nlf.readlines():
+                raw_node_label = dline.strip()
+                if raw_node_label not in node_label_to_index:
+                    node_label_to_index[raw_node_label] = next_index
+                    next_index += 1         
+                indexed_node_label = node_label_to_index[raw_node_label]
+                node_label_by_index.append(indexed_node_label)
+        del node_label_to_index
+        node_label_by_index = np.array(node_label_by_index, dtype=int)
+        node_label_by_index = to_onehot(node_label_by_index)
+
+    # Load node attribute (i.e. node features) if available
+    node_attr = []
+    if os.path.exists(node_attr_file):
+        node_attr = np.loadtxt(node_attr_file, delimiter=',')
+
+    # Read graph labels
+    graph_label = np.loadtxt(graph_label_file)
+    unique_label = np.unique(graph_label)
+    nclass = len(unique_label)
+    ngraph = len(graph_label)
+    raw_label_to_id = {unique_label[i]: i for i in range(nclass)}
+    graph_label = [raw_label_to_id[rl] for rl in graph_label]
+
+    # Read indicator file to know number of lines to read
+    graph_indicator = np.loadtxt(indicator_file, dtype=int)
+    raw_graph_id_to_num_edge = Counter(graph_indicator)
+    assert len(raw_graph_id_to_num_edge) == ngraph, "Inconsistent num graphs!"
+
     # Read graph structure
-    with open('{}/{}/{}_A.txt'.format(dataf,dataset,dataset), 'r') as gf:
+    g_list = []
+    raw_edge_list = np.loadtxt(adj_file, delimiter=',', dtype=int)
+    offset = 0
+    for i, (key, value) in enumerate(raw_graph_id_to_num_edge.items()):
+        nxg = nx.from_edgelist(raw_edge_list[offset:offset+value])
+        gl = graph_label[i]
+        if len(node_label_by_index) != 0:
+            lookup_indices = [i-1 for i in nxg.nodes()]
+            nt = node_label_by_index[lookup_indices]
+        else:
+            nt = None
+        if len(node_attr) != 0:
+            lookup_indices = [i-1 for i in nxg.nodes()]
+            na = node_attr[lookup_indices]
+        else:
+            na = None
+        # Append tags to features if requested
+        if combine_tag_feat:
+            if na is None: 
+                na = nt
+            elif nt is not None:
+                na = np.concatenate((na, nt), axis=1)
+        g = S2VGraph(nxg, gl, node_tags=nt, node_features=na)
+        offset += value
+        g_list.append(g)
+    return g_list, nclass
 
 ##############################################################
 ### Copied from https://github.com/weihua916/powerful-gnns ###
@@ -223,8 +300,11 @@ def separate_data(graph_list, seed, fold_idx):
     test_graph_list = [graph_list[i] for i in test_idx]
 
     return train_graph_list, test_graph_list
+##############################################################
+##############################################################
+##############################################################
 
-
+# Taken from GIN code but changed a bit to allow node features
 class S2VGraph(object):
     def __init__(self, g, label, node_tags=None, node_features=None):
         '''
@@ -238,11 +318,4 @@ class S2VGraph(object):
         self.label = label
         self.g = g
         self.node_tags = node_tags
-        self.neighbors = []
-        self.node_features = 0
-        self.edge_mat = 0
-
-        self.max_neighbor = 0
-##############################################################
-##############################################################
-##############################################################
+        self.node_features = node_features
