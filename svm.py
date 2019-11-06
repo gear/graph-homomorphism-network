@@ -2,12 +2,19 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
-from utils import load_data, load_precompute, save_precompute
+from utils import load_data, load_precompute, save_precompute, load_tud_data
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from homomorphism import get_hom_profile
+
+TUD_datasets = {
+    "COX2",
+    "IMDB-BINARY",
+    "ENZYMES",
+    "COX2-MD"
+}
 
 parser = argparse.ArgumentParser('SVM with homomorphism profile.')
 # Data loader
@@ -22,6 +29,8 @@ parser.add_argument("--precompute", action="store_true", default=False,
                     help="Precomputed homomorphism count.")
 parser.add_argument("--feature", type=str, default="skip",
                     help="How to handle node feature. [skip or append].")
+parser.add_argument("--combine_feature_tag", action="store_true", default=False,
+                    help="Append features and tags in TUD datasets.")
 # Hyperparams for SVM
 parser.add_argument("--C", type=float, help="SVC's C parameter.", default=1e4)
 parser.add_argument("--kernel", type=str, help="SVC kernel function.", 
@@ -49,14 +58,20 @@ if __name__ == "__main__":
     hom_time = 0
     svm_time = 0
     # Load data
-    data, nclass = load_data(args.dataset, False)
+    if args.dataset in TUD_datasets:
+        load_data = load_tud_data
+    data, nclass = load_data(args.dataset, args.combine_feature_tag)
     X = []
     y = [d.label for d in data]
     y = np.array(y)
     node_features = None
     compute_X = False
     if hasattr(data[0], 'node_features'):
-        node_features = [d.node_features.sum(0).numpy() for d in data]
+        # Monkey patch for compatibility with GIN's dataloader
+        try:
+            node_features = [d.node_features.sum(0).numpy() for d in data]
+        except AttributeError:
+            node_features = [d.node_features.sum(0) for d in data]
         node_features = np.array(node_features)
         dim_features = node_features.shape[1]
     # Compute (single type) homomorphism profile
