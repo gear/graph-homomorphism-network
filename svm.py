@@ -11,11 +11,13 @@ from homomorphism import get_hom_profile
 
 TUD_datasets = {
     "COX2",
-    "IMDB-BINARY",
+    "DD",
     "ENZYMES",
-    "COX2-MD",
-    "MUTAG",
-    "NCI1"
+    "COX2_MD",
+    "NCI109",
+    "BZR",
+    "BZR_MD",
+    "REDDIT-BINARY"
 }
 
 parser = argparse.ArgumentParser('SVM with homomorphism profile.')
@@ -73,7 +75,7 @@ if __name__ == "__main__":
     y = np.array(y)
     node_features = None
     compute_X = False
-    if hasattr(data[0], 'node_features'):
+    if data[0].node_features is not None:
         # Monkey patch for compatibility with GIN's dataloader
         try:
             node_features = [d.node_features.sum(0).numpy() for d in data]
