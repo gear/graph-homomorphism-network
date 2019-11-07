@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from utils import load_data, load_precompute, save_precompute, load_tud_data
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
@@ -13,7 +13,8 @@ TUD_datasets = {
     "COX2",
     "IMDB-BINARY",
     "ENZYMES",
-    "COX2-MD"
+    "COX2-MD",
+    "MUTAG"
 }
 
 parser = argparse.ArgumentParser('SVM with homomorphism profile.')
@@ -46,6 +47,8 @@ parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--grid_search", action="store_true", default=False)
 parser.add_argument("--gs_nfolds", type=int, default=5)
 parser.add_argument("--disable_hom", action="store_true", default=False)
+parser.add_argument("--f1avg", type=str, default="micro",
+                    help="Average method for f1.")
 
 
 # Default grid for SVC
@@ -59,6 +62,7 @@ if __name__ == "__main__":
     svm_time = 0
     # Load data
     if args.dataset in TUD_datasets:
+        print("Using TUD data loader...")
         load_data = load_tud_data
     data, nclass = load_data(args.dataset, args.combine_feature_tag)
     X = []
@@ -110,11 +114,12 @@ if __name__ == "__main__":
     best_std = 0
     for j in tqdm(range(args.num_run)):
         acc = []
-        for i in range(args.num_run): 
-            X_train, X_test, y_train, y_test = \
-                train_test_split(X, y, 
-                                 test_size=args.test_ratio,
-                                 random_state=None)
+        skf = StratifiedKFold(n_splits=int(1/args.test_ratio), shuffle=True)
+        for train_idx, test_idx in skf.split(X, y): 
+            X_train = X[train_idx]
+            X_test = X[test_idx] 
+            y_train = y[train_idx] 
+            y_test = y[test_idx]
             # Fit a scaler to training data
             scaler = StandardScaler().fit(X_train)
             X_train = scaler.transform(X_train)
@@ -124,10 +129,10 @@ if __name__ == "__main__":
             else:
                 clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
                           gamma=args.gamma, decision_function_shape='ovr',
-                          random_state=None)
+                          random_state=None, class_weight='balanced')
             clf.fit(X_train, y_train)
-            acc.append(accuracy_score(y_pred=clf.predict(X_test), 
-                                      y_true=y_test))
+            acc.append(f1_score(y_pred=clf.predict(X_test), 
+                                y_true=y_test, average=args.f1avg))
         if np.mean(acc)  > best_acc:
             best_acc = np.mean(acc)
             best_std = np.std(acc)
