@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pickle as pkl
 import networkx as nx
 import numpy as np
@@ -156,23 +157,19 @@ def load_tud_data(dset, combine_tag_feat=False):
 
     # Read indicator file to build node_id to graph_id mapping
     graph_indicator = np.loadtxt(indicator_file, dtype=int)
-    map_node_to_graph = dict()
+    map_graph_to_nodelist = defaultdict(list)
     for node_id in range(1, len(graph_indicator)+1):
         graph_id = graph_indicator[node_id-1]  # id are 1-indexed
-        map_node_to_graph[node_id] = graph_id
+        map_graph_to_nodelist[graph_id].append(node_id)
      
     # Read graph structure
     g_list = []
     edge_list = np.loadtxt(adj_file, delimiter=',', dtype=int)
     G = nx.from_edgelist(edge_list)
-    gen_components = nx.connected_components(G)
-    for set_node in gen_components:
+    for i in range(ngraph):
+        set_node = map_graph_to_nodelist[i+1]
         g = G.subgraph(set_node)
-        gid = 0
-        for node_id in g.nodes():  # TODO: Not sure how to do this better
-            gid = map_node_to_graph[node_id]
-            break
-        gl = graph_label[gid-1]  # id are 1-indexed  
+        gl = graph_label[i]  
         # Build node label
         if len(node_label_onehot) != 0:
             lookup_indices = [j-1 for j in g.nodes()]
@@ -193,7 +190,7 @@ def load_tud_data(dset, combine_tag_feat=False):
                 na = np.concatenate((na, nt), axis=1)
         # If graph attribute is available
         if len(graph_attr) != 0:
-            ga = graph_attr[gid-1]
+            ga = graph_attr[i]
         else:
             ga = None
         g = S2VGraph(g, gl, node_tags=nt, node_features=na, graph_feature=ga)
