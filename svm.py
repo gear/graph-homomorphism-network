@@ -14,7 +14,8 @@ TUD_datasets = {
     "IMDB-BINARY",
     "ENZYMES",
     "COX2-MD",
-    "MUTAG"
+    "MUTAG",
+    "NCI1"
 }
 
 parser = argparse.ArgumentParser('SVM with homomorphism profile.')
@@ -64,6 +65,8 @@ if __name__ == "__main__":
     if args.dataset in TUD_datasets:
         print("Using TUD data loader...")
         load_data = load_tud_data
+    else:
+        args.combine_feature_tag = False
     data, nclass = load_data(args.dataset, args.combine_feature_tag)
     X = []
     y = [d.label for d in data]
@@ -88,7 +91,8 @@ if __name__ == "__main__":
         profile_func = get_hom_profile(args.hom_type)
         print("Computing {} homomorphism...".format(args.hom_type))
         for d in tqdm(data):
-            profile = profile_func(d.g, size=args.hom_size)
+            profile = profile_func(d.g, size=args.hom_size, 
+                                   density=args.hom_density)
             X.append(profile)
         hom_time = time() - hom_time
     X = np.array(X, dtype=float)
