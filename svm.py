@@ -116,8 +116,7 @@ if __name__ == "__main__":
     # Train SVC 
     print("Training SVM...")
     svm_time = time()
-    best_acc = 0
-    best_std = 0
+    a_acc = []  # All accuracies of num_run
     for j in tqdm(range(args.num_run)):
         acc = []
         skf = StratifiedKFold(n_splits=int(1/args.test_ratio), shuffle=True)
@@ -139,10 +138,8 @@ if __name__ == "__main__":
             clf.fit(X_train, y_train)
             acc.append(f1_score(y_pred=clf.predict(X_test), 
                                 y_true=y_test, average=args.f1avg))
-        if np.mean(acc)  > best_acc:
-            best_acc = np.mean(acc)
-            best_std = np.std(acc)
+        a_acc.extend(acc)
     svm_time = time() - svm_time
-    print("Accuracy: {:.4f} +/- {:.4f}".format(best_acc, best_std))
+    print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
     print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run**2)))
