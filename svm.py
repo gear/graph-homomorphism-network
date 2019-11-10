@@ -55,9 +55,10 @@ parser.add_argument("--f1avg", type=str, default="micro",
 
 
 # Default grid for SVC
-Cs = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
-gammas = [0.001, 0.01, 0.1, 1.0, 10.0]
-param_grid = {'C': Cs, 'gamma': gammas}
+Cs = [1.0, 10.0, 100.0]
+gammas = [0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 10.0]
+class_weight = ['balanced']
+param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -65,7 +66,6 @@ if __name__ == "__main__":
     svm_time = 0
     # Load data
     if args.dataset in TUD_datasets:
-        print("Using TUD data loader...")
         load_data = load_tud_data
     else:
         args.combine_feature_tag = False
@@ -107,17 +107,10 @@ if __name__ == "__main__":
     if args.feature == "append" and node_features is not None:
         print("Appending features...")
         X = np.concatenate((X, node_features), axis=1)
-    # Grid search SVC
-    if args.grid_search:
-        grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
-                                   iid=False, cv=args.gs_nfolds, n_jobs=4)
-        grid_search.fit(X,y)
-        print(grid_search.best_params_)
     # Train SVC 
     print("Training SVM...")
     svm_time = time()
-    best_acc = 0
-    best_std = 0
+    a_acc = []  # All accuracies of num_run
     for j in tqdm(range(args.num_run)):
         acc = []
         skf = StratifiedKFold(n_splits=int(1/args.test_ratio), shuffle=True)
@@ -131,6 +124,10 @@ if __name__ == "__main__":
             X_train = scaler.transform(X_train)
             X_test = scaler.transform(X_test)
             if args.grid_search:
+                grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
+                                           iid=False, cv=args.gs_nfolds, 
+                                           n_jobs=8)
+                grid_search.fit(X_train,y_train)
                 clf = SVC(**grid_search.best_params_)
             else:
                 clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
@@ -139,10 +136,8 @@ if __name__ == "__main__":
             clf.fit(X_train, y_train)
             acc.append(f1_score(y_pred=clf.predict(X_test), 
                                 y_true=y_test, average=args.f1avg))
-        if np.mean(acc)  > best_acc:
-            best_acc = np.mean(acc)
-            best_std = np.std(acc)
+        a_acc.extend(acc)
     svm_time = time() - svm_time
-    print("Accuracy: {:.4f} +/- {:.4f}".format(best_acc, best_std))
+    print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
     print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run**2)))

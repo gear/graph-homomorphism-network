@@ -78,11 +78,11 @@ def cycle_profile(G, size=6, density=False):
     return [hom(c, G, density=density) for c in c_list]
 
 
-def tree_path_profile(G, size=6, density=False):
-    """Run profile for both tree and path."""
+def tree_cycle_profile(G, size=6, density=False):
+    """Run profile for both tree and cycle."""
     tree_pf = tree_profile(G, size, density)
-    path_pf = path_profile(G, size, density)
-    return tree_pf + path_pf
+    cycle_pf = cycle_profile(G, size, density)
+    return tree_pf + cycle_pf
     
 
 def get_hom_profile(f_str):
@@ -92,7 +92,7 @@ def get_hom_profile(f_str):
         return path_profile
     elif f_str == "cycle":
         return cycle_profile
-    elif f_str == "tree+path":
-        return tree_path_profile
+    elif f_str == "tree+cycle":
+        return tree_cycle_profile
     else:
         raise ValueError("{} is not a valid F class.".format(f_str))

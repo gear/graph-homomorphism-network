@@ -112,6 +112,8 @@ def load_tud_data(dset, combine_tag_feat=False):
 
     combine_tag_feat: append node tags to node features (stored in features).
     """
+    
+    print("Loading {} (TUD dataloader)...".format(dset))
     dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
     adj_file = "{}/{}/{}_A.txt".format(dataf, dset, dset)
     indicator_file = "{}/{}/{}_graph_indicator.txt".format(dataf, dset, dset)
@@ -206,7 +208,7 @@ def load_data(dataset, degree_as_tag):
         test_proportion: ratio of test train split
         seed: random seed for random splitting of dataset
     '''
-    print('loading data')
+    print("Loading {} (GIN dataloader)...".format(dataset))
     g_list = []
     label_dict = {}
     feat_dict = {}
@@ -294,11 +296,6 @@ def load_data(dataset, degree_as_tag):
         g.node_features = torch.zeros(len(g.node_tags), len(tagset))
         g.node_features[range(len(g.node_tags)),\
                         [tag2index[tag] for tag in g.node_tags]] = 1
-
-    print('# classes: %d' % len(label_dict))
-    print('# maximum node tag: %d' % len(tagset))
-
-    print("# data: %d" % len(g_list))
 
     return g_list, len(label_dict)
 
