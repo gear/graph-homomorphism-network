@@ -56,14 +56,12 @@ def nx2gt(nxg):
 def nx2homg(nxg):
     """Convert nx graph to homlib graph format. Only 
     undirected graphs are supported. 
-    originally suggested by Takanori Maehara (@spagetti-source)"""
+    originally suggested by Takanori Maehara (@spagetti-source).
+    Note: This function expects nxg to have consecutive integer index."""
     n = nxg.number_of_nodes()
     G = hlGraph(n)
-    node_id_to_index = dict()
-    for i, node in enumerate(nxg.nodes()):
-        node_id_to_index[node] = i
     for (u, v) in nxg.edges():
-        G.addEdge(node_id_to_index[u],node_id_to_index[v])
+        G.addEdge(u,v)
     return G
 
 
