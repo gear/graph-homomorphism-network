@@ -23,6 +23,20 @@ def hom_tree(F, G):
     return np.sum(hom_r)
 
 
+def hom_tree_labeled(F, G, node_features):
+    def rec(x, p):
+        hom_x = np.ones(len(G.nodes()), dtype=float)
+        for y in F.neighbors(x):
+            if y == p:
+                continue
+            hom_y = rec(y, x)
+            aux = [np.sum(hom_y[list(G.neighbors(a))]) for a in G.nodes()]
+            hom_x *= np.array(aux)
+        return hom_x
+    hom_r = rec(0, -1)
+    return np.sum(hom_r)
+
+
 def hom(F, G, f_is_tree=False, density=False):
     """Wrapper for the `hom` function in `homlib`
     (https://github.com/spaghetti-source/homlib). 
