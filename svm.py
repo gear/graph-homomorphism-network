@@ -140,4 +140,5 @@ if __name__ == "__main__":
     svm_time = time() - svm_time
     print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
-    print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run**2)))
+    print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run*\
+                                                      int(1/args.test_ratio))))
