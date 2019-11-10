@@ -171,7 +171,7 @@ def load_tud_data(dset, combine_tag_feat=False):
     for i in range(ngraph):
         set_node = map_graph_to_nodelist[i+1]
         g = G.subgraph(set_node)
-        gl = graph_label[i]  
+        gl = graph_label[i]
         # Build node label
         if len(node_label_onehot) != 0:
             lookup_indices = [j-1 for j in g.nodes()]
@@ -195,6 +195,9 @@ def load_tud_data(dset, combine_tag_feat=False):
             ga = graph_attr[i]
         else:
             ga = None
+        # Convert nodes to consecutive 0-idx integers preserving g.nodes() order
+        g = nx.convert_node_labels_to_integers(g, first_label=0, 
+                                               ordering='default')
         g = S2VGraph(g, gl, node_tags=nt, node_features=na, graph_feature=ga)
         g_list.append(g)
     return g_list, nclass
