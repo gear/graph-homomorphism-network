@@ -166,9 +166,14 @@ def load_tud_data(dset, combine_tag_feat=False):
     g_list = []
     edge_list = np.loadtxt(adj_file, delimiter=',', dtype=int)
     G = nx.from_edgelist(edge_list)
+    num_nodes = max(G.nodes())  # Make sure isolated nodes are added to G
+    for nid in range(1, num_nodes+1):
+        if nid not in G:
+            G.add_node(nid)
     for i in range(ngraph):
         set_node = map_graph_to_nodelist[i+1]
         g = G.subgraph(set_node)
+        assert g.number_of_nodes() == len(set_node), "{}".format(set_node)
         gl = graph_label[i]
         # Build node label
         if len(node_label_onehot) != 0:
