@@ -23,11 +23,6 @@ TUD_datasets = {
 parser = argparse.ArgumentParser('SVM with homomorphism profile.')
 # Data loader
 parser.add_argument("--dataset", type=str, help="Dataset name to run.")
-parser.add_argument("--hom_type", type=str, help="Type of homomorphism.")
-parser.add_argument("--hom_size", type=int, default=6,
-                    help="Max size of F graph.")
-parser.add_argument("--hom_density", action="store_true", default=False,
-                    help="Compute homomorphism density instead of count.")
 parser.add_argument("--test_ratio", type=float, help="Test split.", default=0.1)
 parser.add_argument("--precompute", action="store_true", default=False, 
                     help="Precomputed homomorphism count.")
@@ -35,6 +30,12 @@ parser.add_argument("--feature", type=str, default="skip",
                     help="How to handle node feature. [skip or append].")
 parser.add_argument("--combine_feature_tag", action="store_true", default=False,
                     help="Append features and tags in TUD datasets.")
+# Parameters for homomorphism
+parser.add_argument("--hom_type", type=str, help="Type of homomorphism.")
+parser.add_argument("--hom_size", type=int, default=6,
+                    help="Max size of F graph.")
+parser.add_argument("--hom_density", action="store_true", default=False,
+                    help="Compute homomorphism density instead of count.")
 # Hyperparams for SVM
 parser.add_argument("--C", type=float, help="SVC's C parameter.", default=1e4)
 parser.add_argument("--kernel", type=str, help="SVC kernel function.", 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     # Compute (single type) homomorphism profile
     if args.precompute:
         X = load_precompute(args.dataset, args.hom_type, args.hom_size)
-    # If X is [] 
+    # If X is []
     if len(X) == 0:
         compute_X = True
         hom_time = time()
@@ -94,7 +95,8 @@ if __name__ == "__main__":
         print("Computing {} homomorphism...".format(args.hom_type))
         for d in tqdm(data):
             profile = profile_func(d.g, size=args.hom_size, 
-                                   density=args.hom_density)
+                                   density=args.hom_density,
+                                   node_tags=d.node_tags)
             X.append(profile)
         hom_time = time() - hom_time
     X = np.array(X, dtype=float)
