@@ -6,9 +6,11 @@ import numpy as np
 from  multiprocessing import Pool
 
 
-def hom_tree(F, G):
+def hom_tree(F, G, indexed=False):
     """Specialized tree homomorphism in Python (serializable).
     By: Takanori Maehara (maehara@prefield.com)
+
+    Add `indexed` parameter
     """
     def rec(x, p):
         hom_x = np.ones(len(G.nodes()), dtype=float)
@@ -20,21 +22,9 @@ def hom_tree(F, G):
             hom_x *= np.array(aux)
         return hom_x
     hom_r = rec(0, -1)
-    return np.sum(hom_r)
-
-
-def hom_tree_labeled(F, G, node_features):
-    def rec(x, p):
-        hom_x = np.ones(len(G.nodes()), dtype=float)
-        for y in F.neighbors(x):
-            if y == p:
-                continue
-            hom_y = rec(y, x)
-            aux = [np.sum(hom_y[list(G.neighbors(a))]) for a in G.nodes()]
-            hom_x *= np.array(aux)
-        return hom_x
-    hom_r = rec(0, -1)
-    return np.sum(hom_r)
+    if not indexed:
+        hom_r = np.sum(hom_r) 
+    return hom_r
 
 
 def hom(F, G, f_is_tree=False, density=False):
