@@ -6,7 +6,7 @@ from utils import load_data, load_precompute, save_precompute, load_tud_data
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score, accuracy_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler
 from homomorphism import get_hom_profile
 
 TUD_datasets = {
@@ -56,7 +56,7 @@ parser.add_argument("--f1avg", type=str, default="micro",
 
 
 # Default grid for SVC
-Cs = [1.0, 10.0, 100.0]
+Cs = [1.0, 2.0, 10.0, 100.0]
 gammas = [0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 10.0]
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
@@ -122,7 +122,8 @@ if __name__ == "__main__":
             y_train = y[train_idx] 
             y_test = y[test_idx]
             # Fit a scaler to training data
-            scaler = StandardScaler().fit(X_train)
+            normalization_class = StandardScaler
+            scaler = normalization_class().fit(X_train)
             X_train = scaler.transform(X_train)
             X_test = scaler.transform(X_test)
             if args.grid_search:
