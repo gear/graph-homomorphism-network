@@ -19,9 +19,11 @@ except:
     print("Please install homlib library to compute homomorphism.")
 
 
-def to_onehot(X):
+def to_onehot(X, nmax=None):
     """Convert a 1d numpy array to 2d one hot."""
-    oh = np.zeros((X.size, X.max()+1)) 
+    if nmax is None:
+        nmax = X.max()+1
+    oh = np.zeros((X.size, nmax))
     oh[np.arange(X.size), X] = 1
     return oh
 
@@ -102,7 +104,7 @@ def graph_type(g):
     #TODO(N): Add for graph-tool type if needed.
 
 
-def load_tud_data(dset, combine_tag_feat=False):
+def load_tud_data(dset, combine_tag_feat=False, **kwargs):
     """Utility function to load other datasets for graph
     classification besides the one provided by GIN. These graphs
     follow TU Dormund's format.
@@ -208,7 +210,7 @@ def load_tud_data(dset, combine_tag_feat=False):
 ##############################################################
 ### Copied from https://github.com/weihua916/powerful-gnns ###
 ##############################################################
-def load_data(dataset, degree_as_tag):
+def load_data(dataset, degree_as_tag, onehot_tags=False, **kwargs):
     '''
         dataset: name of dataset
         test_proportion: ratio of test train split
@@ -302,6 +304,11 @@ def load_data(dataset, degree_as_tag):
         g.node_features = torch.zeros(len(g.node_tags), len(tagset))
         g.node_features[range(len(g.node_tags)),\
                         [tag2index[tag] for tag in g.node_tags]] = 1
+
+    if onehot_tags:
+        nmax = max(max(g.node_tags) for g in g_list) + 1
+        for g in g_list:
+            g.node_tags = to_onehot(np.array(g.node_tags), nmax)
 
     return g_list, len(label_dict)
 

@@ -65,12 +65,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
     hom_time = 0
     svm_time = 0
-    # Load data
+    # Choose function to load data
     if args.dataset in TUD_datasets:
         load_data = load_tud_data
     else:
         args.combine_feature_tag = False
-    data, nclass = load_data(args.dataset, args.combine_feature_tag)
+    # If use labeled homomorphism, node tags of GIN loader must be one hot. 
+    if args.hom_type.startswith("labeled"):
+        data, nclass = load_data(args.dataset, args.combine_feature_tag,
+                                 onehot_tags=True)
+    else:
+        data, nclass = load_data(args.dataset, args.combine_feature_tag)
     X = []
     y = [d.label for d in data]
     y = np.array(y)
