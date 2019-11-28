@@ -111,3 +111,6 @@ COLLAB/
 
 # ds_store
 .DS_STORE/
+
+# vscode
+.vscode/
