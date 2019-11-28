@@ -36,7 +36,7 @@ def get_scaler(scaler_name):
                               quantile_range=(25.0, 75.0), copy=True) 
     elif scaler_name == "quantile":
         scaler = QuantileTransformer(n_quantiles=10, 
-                                     output_distribution='uniform', 
+                                     output_distribution='normal', 
                                      ignore_implicit_zeros=False, 
                                      subsample=100, copy=True)
     elif scaler_name == "power":
