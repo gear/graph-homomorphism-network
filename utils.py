@@ -7,6 +7,9 @@ import torch
 import os
 
 from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler,\
+                                  RobustScaler, QuantileTransformer,\
+                                  PowerTransformer, KBinsDiscretizer
 
 try:
     from graph_tool.all import Graph as gtGraph
@@ -18,6 +21,32 @@ try:
 except:
     print("Please install homlib library to compute homomorphism.")
 
+
+def get_scaler(scaler_name):
+    """Utils to get data scaler by name"""
+    scaler = None
+    if scaler_name == "standard":
+        scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
+    elif scaler_name == "minmax":
+        scaler = MinMaxScaler(feature_range=(0, 1), copy=True)
+    elif scaler_name == "maxabs":
+        scaler = MaxAbsScaler(copy=True)
+    elif scaler_name == "robust":
+        scaler = RobustScaler(with_centering=True, with_scaling=True, 
+                              quantile_range=(25.0, 75.0), copy=True) 
+    elif scaler_name == "quantile":
+        scaler = QuantileTransformer(n_quantiles=10, 
+                                     output_distribution='uniform', 
+                                     ignore_implicit_zeros=False, 
+                                     subsample=100, copy=True)
+    elif scaler_name == "power":
+        scaler = PowerTransformer(method='yeo-johnson', 
+                                  standardize=True, copy=True) 
+    elif scaler_name == "kbins":
+        scaler = KBinsDiscretizer(n_bins=5, encode='onehot', 
+                                  strategy='quantile')
+    return scaler
+      
 
 def to_onehot(X, nmax=None):
     """Convert a 1d numpy array to 2d one hot."""

@@ -3,10 +3,10 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from utils import load_data, load_precompute, save_precompute, load_tud_data
+from utils import get_scaler
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import f1_score, accuracy_score
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler
 from homomorphism import get_hom_profile
 
 TUD_datasets = {
@@ -16,8 +16,7 @@ TUD_datasets = {
     "COX2_MD",
     "NCI109",
     "BZR",
-    "BZR_MD",
-    "REDDIT-BINARY"
+    "BZR_MD"
 }
 
 parser = argparse.ArgumentParser('SVM with homomorphism profile.')
@@ -53,6 +52,8 @@ parser.add_argument("--gs_nfolds", type=int, default=5)
 parser.add_argument("--disable_hom", action="store_true", default=False)
 parser.add_argument("--f1avg", type=str, default="micro",
                     help="Average method for f1.")
+parser.add_argument("--scaler", type=str, default="standard",
+                    help="Name of data scaler to use as the preprocessing step")
 
 
 # Default grid for SVC
@@ -60,6 +61,7 @@ Cs = [1.0, 2.0, 10.0, 100.0]
 gammas = [0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 10.0]
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -127,8 +129,8 @@ if __name__ == "__main__":
             y_train = y[train_idx] 
             y_test = y[test_idx]
             # Fit a scaler to training data
-            normalization_class = StandardScaler
-            scaler = normalization_class().fit(X_train)
+            scaler = get_scaler(args.scaler)
+            scaler = scaler.fit(X_train)
             X_train = scaler.transform(X_train)
             X_test = scaler.transform(X_test)
             if args.grid_search:
