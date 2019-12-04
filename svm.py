@@ -73,7 +73,7 @@ if __name__ == "__main__":
     else:
         args.combine_feature_tag = False
     # If use labeled homomorphism, node tags of GIN loader must be one hot. 
-    if args.hom_type.startswith("labeled"):
+    if args.hom_type.find("labeled") > -1:
         data, nclass = load_data(args.dataset, args.combine_feature_tag,
                                  onehot_tags=True)
     else:

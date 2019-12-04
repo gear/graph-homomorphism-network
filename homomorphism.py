@@ -46,6 +46,27 @@ def hom_tree_labeled(F, G, node_tags=None):
     return np.sum(hom_r, axis=1)
 
 
+def hom_tree_explabeled(F, G, node_tags=None):
+    """Tree homomorphism with node labels (tags).
+    """
+    if node_tags is None:
+        print("Warning: Missing node tags.")
+        return hom_tree(F, G)
+    if type(node_tags) is list:
+        node_tags = np.array(node_tags)
+    def rec(x, p):
+        hom_x = np.exp(node_tags.T.copy())
+        for y in F.neighbors(x):
+            if y == p:
+                continue
+            hom_y = rec(y, x)
+            aux = [np.sum(hom_y[:,list(G.neighbors(a))]) for a in G.nodes()]
+            hom_x *= np.array(aux)
+        return hom_x
+    hom_r = rec(0, -1)
+    return np.log(np.sum(hom_r, axis=1))
+
+
 def hom(F, G, f_is_tree=False, density=False):
     """Wrapper for the `hom` function in `homlib`
     (https://github.com/spaghetti-source/homlib). 
@@ -101,9 +122,18 @@ def labeled_tree_profile(G, size=6, node_tags=None, **kwargs):
     return np.concatenate(hom_list)
 
 
+def explabeled_tree_profile(G, size=6, node_tags=None, **kwargs):
+    """Run profile for exponentially labeled trees."""
+    t_list = tree_list(size, to_homlib=False)
+    hom_list = [hom_tree_explabeled(t, G, node_tags) for t in t_list]
+    return np.concatenate(hom_list)
+
+
 def get_hom_profile(f_str):
     if f_str == "labeled_tree":
         return labeled_tree_profile
+    elif f_str == "explabeled_tree":
+        return explabeled_tree_profile
     elif f_str == "tree":
         return tree_profile
     elif f_str == "path":
