@@ -46,7 +46,7 @@ def hom_tree_labeled(F, G, node_tags=None):
     return np.sum(hom_r, axis=1)
 
 
-def hom_tree_explabeled(F, G, node_tags=None):
+def hom_tree_explabeled(F, G, node_tags=None, exp=np.e):
     """Tree homomorphism with node labels (tags).
     """
     if node_tags is None:
@@ -55,7 +55,7 @@ def hom_tree_explabeled(F, G, node_tags=None):
     if type(node_tags) is list:
         node_tags = np.array(node_tags)
     def rec(x, p):
-        hom_x = np.exp(node_tags.T.copy())
+        hom_x = np.power(exp, node_tags.T.copy())
         for y in F.neighbors(x):
             if y == p:
                 continue
