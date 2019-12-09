@@ -10,6 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler,\
                                   RobustScaler, QuantileTransformer,\
                                   PowerTransformer, KBinsDiscretizer
+from sklearn.feature_extraction.text import TfidfTransformer
 
 try:
     from graph_tool.all import Graph as gtGraph
@@ -45,6 +46,9 @@ def get_scaler(scaler_name):
     elif scaler_name == "kbins":
         scaler = KBinsDiscretizer(n_bins=5, encode='onehot', 
                                   strategy='quantile')
+    elif scaler_name == "tfidf":
+        scaler = TfidfTransformer(norm='l2', use_idf=True, 
+                                  smooth_idf=True, sublinear_tf=False)
     return scaler
       
 
