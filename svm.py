@@ -57,8 +57,8 @@ parser.add_argument("--scaler", type=str, default="standard",
 
 
 # Default grid for SVC
-Cs = [1.0, 2.0, 10.0, 100.0]
-gammas = [0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 10.0]
+Cs = np.logspace(-5, 6, 120)
+gammas = np.logspace(-5, 1, 20)
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
 
@@ -119,36 +119,16 @@ if __name__ == "__main__":
     # Train SVC 
     print("Training SVM...")
     svm_time = time()
-    a_acc = []  # All accuracies of num_run
-    for j in tqdm(range(args.num_run)):
-        acc = []
-        skf = StratifiedKFold(n_splits=int(1/args.test_ratio), shuffle=True)
-        for train_idx, test_idx in skf.split(X, y): 
-            X_train = X[train_idx]
-            X_test = X[test_idx] 
-            y_train = y[train_idx] 
-            y_test = y[test_idx]
-            # Fit a scaler to training data
-            scaler = get_scaler(args.scaler)
-            scaler = scaler.fit(X_train)
-            X_train = scaler.transform(X_train)
-            X_test = scaler.transform(X_test)
-            if args.grid_search:
-                grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
-                                           iid=False, cv=args.gs_nfolds, 
-                                           n_jobs=8)
-                grid_search.fit(X_train,y_train)
-                clf = SVC(**grid_search.best_params_)
-            else:
-                clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
-                          gamma=args.gamma, decision_function_shape='ovr',
-                          random_state=None, class_weight='balanced')
-            clf.fit(X_train, y_train)
-            acc.append(f1_score(y_pred=clf.predict(X_test), 
-                                y_true=y_test, average=args.f1avg))
-        a_acc.extend(acc)
+    skf = StratifiedKFold(n_splits=10, shuffle=True)
+    scaler = get_scaler(args.scaler)
+    scaler = scaler.fit(X)
+    X = scaler.transform(X)
+    clf = GridSearchCV(SVC(), param_grid, 
+                           iid=False, cv=skf, n_jobs=8)
+    clf.fit(X, y)
     svm_time = time() - svm_time
-    print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
+    ind = np.argmax(clf.cv_results_['mean_test_score'])
+    print("Accuracy: {:.4f} +/- {:.4f}".format(clf.cv_results_['mean_test_score'][ind], clf.cv_results_['std_test_score'][ind]))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
-    print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run*\
-                                                      int(1/args.test_ratio))))
+    print("Time for SVM: {:.2f} sec".format(svm_time))
+    print("Best params: ", clf.best_params_)
