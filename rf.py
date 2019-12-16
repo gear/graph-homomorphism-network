@@ -5,7 +5,7 @@ from time import time
 from utils import load_data, load_precompute, save_precompute, load_tud_data
 from utils import get_scaler
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, accuracy_score
 from homomorphism import get_hom_profile
 
@@ -19,7 +19,7 @@ TUD_datasets = {
     "BZR_MD"
 }
 
-parser = argparse.ArgumentParser('SVM with homomorphism profile.')
+parser = argparse.ArgumentParser('Random Forest with homomorphism profile.')
 # Data loader
 parser.add_argument("--dataset", type=str, help="Dataset name to run.")
 parser.add_argument("--test_ratio", type=float, help="Test split.", default=0.1)
@@ -35,14 +35,11 @@ parser.add_argument("--hom_size", type=int, default=6,
                     help="Max size of F graph.")
 parser.add_argument("--hom_density", action="store_true", default=False,
                     help="Compute homomorphism density instead of count.")
-# Hyperparams for SVM
-parser.add_argument("--C", type=float, help="SVC's C parameter.", default=1e4)
-parser.add_argument("--kernel", type=str, help="SVC kernel function.", 
-                    default="rbf")
-parser.add_argument("--degree", type=int, help="Degree of `poly` kernel.",
-                    default=2)
-parser.add_argument("--gamma", type=float, help="SVC's gamma parameter.",
-                    default=40.0)
+# Hyperparams for Random Forest
+parser.add_argument("--n_est", type=float, help="Number of estimators", 
+                    default=20)
+parser.add_argument("--criterion", type=str, help="Quality function of splits",
+                    default="gini")
 # Misc
 parser.add_argument("--num_run", type=int, default=10,
                     help="Number of experiments to run.")
@@ -56,17 +53,17 @@ parser.add_argument("--scaler", type=str, default="standard",
                     help="Name of data scaler to use as the preprocessing step")
 
 
-# Default grid for SVC
-Cs = [1.0, 2.0, 10.0, 100.0]
-gammas = [0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 10.0]
+# Default grid for Random Forest
+n_est = [2, 8, 32, 128, 512]
 class_weight = ['balanced']
-param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
+crit = ["gini", "entropy"]
+param_grid = {'n_estimators': n_est, 'criterion': crit, 'class_weight': class_weight}
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     hom_time = 0
-    svm_time = 0
+    rf_time = 0
     # Choose function to load data
     if args.dataset in TUD_datasets:
         load_data = load_tud_data
@@ -116,9 +113,9 @@ if __name__ == "__main__":
     if args.feature == "append" and node_features is not None:
         print("Appending features...")
         X = np.concatenate((X, node_features), axis=1)
-    # Train SVC 
-    print("Training SVM...")
-    svm_time = time()
+    # Train Random Forest
+    print("Training Random Forest...")
+    rf_time = time()
     a_acc = []  # All accuracies of num_run
     for j in tqdm(range(args.num_run)):
         acc = []
@@ -134,22 +131,23 @@ if __name__ == "__main__":
             X_train = scaler.transform(X_train)
             X_test = scaler.transform(X_test)
             if args.grid_search:
-                grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
+                gs = GridSearchCV(RandomForestClassifier(), param_grid,
                                            iid=False, cv=args.gs_nfolds, 
                                            n_jobs=8)
-                grid_search.fit(X_train,y_train)
-                print(grid_search.best_params_)
-                clf = SVC(**grid_search.best_params_)
+                gs.fit(X_train,y_train)
+                print(gs.best_params_)
+                clf = RandomForestClassifier(**gs.best_params_)
             else:
-                clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
-                          gamma=args.gamma, decision_function_shape='ovr',
-                          random_state=None, class_weight='balanced')
+                clf = RandomForestClassifier(n_estimators=args.n_est, 
+                                             criterion=args.criterion,
+                                             random_state=None, 
+                                             class_weight='balanced')
             clf.fit(X_train, y_train)
             acc.append(f1_score(y_pred=clf.predict(X_test), 
                                 y_true=y_test, average=args.f1avg))
         a_acc.extend(acc)
-    svm_time = time() - svm_time
+    rf_time = time() - rf_time
     print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
-    print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run*\
+    print("Time for Random Forest: {:.2f} sec".format(rf_time/(args.num_run*\
                                                       int(1/args.test_ratio))))
