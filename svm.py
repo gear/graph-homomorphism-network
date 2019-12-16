@@ -57,8 +57,8 @@ parser.add_argument("--scaler", type=str, default="standard",
 
 
 # Default grid for SVC
-Cs = [1.0, 2.0, 10.0, 100.0]
-gammas = [0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 10.0]
+Cs = np.logspace(-5, 6, 120)
+gammas = np.logspace(-5, 1, 20)
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
 
@@ -149,7 +149,8 @@ if __name__ == "__main__":
                                 y_true=y_test, average=args.f1avg))
         a_acc.extend(acc)
     svm_time = time() - svm_time
+    ind = np.argmax(clf.cv_results_['mean_test_score'])
     print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
-    print("Time for SVM: {:.2f} sec".format(svm_time/(args.num_run*\
-                                                      int(1/args.test_ratio))))
+    print("Time for SVM: {:.2f} sec".format(svm_time))
+    print("Best params: ", clf.best_params_)
