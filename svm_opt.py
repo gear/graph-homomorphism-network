@@ -1,13 +1,15 @@
+import os
+os.environ["OMP_NUM_THREADS"] = "1"  # so hpsklearn won't complain
 import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
 from utils import load_data, load_precompute, save_precompute, load_tud_data
 from utils import get_scaler
-from sklearn.model_selection import StratifiedKFold, GridSearchCV
-from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.metrics import f1_score, accuracy_score
 from homomorphism import get_hom_profile
+from hpsklearn import HyperoptEstimator, svc
 
 TUD_datasets = {
     "COX2",
@@ -35,20 +37,9 @@ parser.add_argument("--hom_size", type=int, default=6,
                     help="Max size of F graph.")
 parser.add_argument("--hom_density", action="store_true", default=False,
                     help="Compute homomorphism density instead of count.")
-# Hyperparams for SVM
-parser.add_argument("--C", type=float, help="SVC's C parameter.", default=1e4)
-parser.add_argument("--kernel", type=str, help="SVC kernel function.", 
-                    default="rbf")
-parser.add_argument("--degree", type=int, help="Degree of `poly` kernel.",
-                    default=2)
-parser.add_argument("--gamma", type=float, help="SVC's gamma parameter.",
-                    default=40.0)
 # Misc
-parser.add_argument("--num_run", type=int, default=10,
-                    help="Number of experiments to run.")
+parser.add_argument("--num_run", type=int, default=10)
 parser.add_argument("--seed", type=int, default=42)
-parser.add_argument("--grid_search", action="store_true", default=False)
-parser.add_argument("--gs_nfolds", type=int, default=5)
 parser.add_argument("--disable_hom", action="store_true", default=False)
 parser.add_argument("--f1avg", type=str, default="micro",
                     help="Average method for f1.")
@@ -56,11 +47,6 @@ parser.add_argument("--scaler", type=str, default="standard",
                     help="Name of data scaler to use as the preprocessing step")
 
 
-# Default grid for SVC
-Cs = np.logspace(-5, 6, 120)
-gammas = np.logspace(-5, 1, 20)
-class_weight = ['balanced']
-param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
 
 
 if __name__ == "__main__":
@@ -117,38 +103,35 @@ if __name__ == "__main__":
         print("Appending features...")
         X = np.concatenate((X, node_features), axis=1)
     # Train SVC 
-    print("Training SVM...")
+    print("Optimizing SVM...")
     svm_time = time()
-    a_acc = []  # All accuracies of num_run
-    for j in tqdm(range(args.num_run)):
-        acc = []
-        skf = StratifiedKFold(n_splits=int(1/args.test_ratio), shuffle=True)
-        for train_idx, test_idx in skf.split(X, y): 
-            X_train = X[train_idx]
-            X_test = X[test_idx] 
-            y_train = y[train_idx] 
-            y_test = y[test_idx]
-            # Fit a scaler to training data
-            scaler = get_scaler(args.scaler)
-            scaler = scaler.fit(X_train)
-            X_train = scaler.transform(X_train)
-            X_test = scaler.transform(X_test)
-            if args.grid_search:
-                grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
-                                           iid=False, cv=args.gs_nfolds, 
-                                           n_jobs=8)
-                grid_search.fit(X_train,y_train)
-                print(grid_search.best_params_)
-                clf = SVC(**grid_search.best_params_)
-            else:
-                clf = SVC(C=args.C, kernel=args.kernel, degree=args.degree, 
-                          gamma=args.gamma, decision_function_shape='ovr',
-                          random_state=None, class_weight='balanced')
-            clf.fit(X_train, y_train)
-            acc.append(f1_score(y_pred=clf.predict(X_test), 
-                                y_true=y_test, average=args.f1avg))
-        a_acc.extend(acc)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, 
+                                                    test_size=args.test_ratio)
+    scaler = get_scaler(args.scaler)
+    scaler = scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+    clf = HyperoptEstimator(classifier=svc('default'))
+    clf.fit(X_train, y_train)
+    acc = f1_score(y_pred=clf.predict(X_test), 
+                   y_true=y_test, average=args.f1avg)
     svm_time = time() - svm_time
-    print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
+    accs = []
+    sss = StratifiedShuffleSplit(n_splits=10, test_size=args.test_ratio)
+    for train_index, test_index in sss.split(X,y):
+        X_train = X[train_index]
+        X_test = X[test_index]
+        y_train = y[train_index]
+        y_test = y[test_index]
+        scaler = get_scaler(args.scaler)
+        scaler = scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+        clf.retrain_best_model_on_full_data(X_train, y_train)
+        acc = f1_score(y_pred=clf.predict(X_test),
+                       y_true=y_test, average=args.f1avg)
+        accs.append(acc)
+    print("Accuracy: {:.4f} ± {:.4f}".format(np.mean(accs), np.std(accs)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
     print("Time for SVM: {:.2f} sec".format(svm_time))
+    print(clf.best_model())
