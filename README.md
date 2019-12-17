@@ -12,3 +12,7 @@ Experiment sheet:
 ```
 https://docs.google.com/spreadsheets/d/1-1gXlCyXHpO_DJKdi_XJyvwoa_11K962AYhAVdRk8Fw/edit?usp=sharing
 ```
+
+To run hyperopt:
+cd to the folder
+pip install -e .
