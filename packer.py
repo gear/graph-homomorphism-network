@@ -1,9 +1,25 @@
+"""
+This file is meant to use in development only.
+"""
 import torch_geometric.datasets as dt
 import pickle as p
 import numpy as np
+import os.path as osp
 import argparse
 
 from torch_geometric.utils import to_networkx
+
+def gin_cv(dname, path):
+    """Read and save cross validation indices from GIN repository."""
+    cv = []
+    for i in range(1, 11):
+        test_idx = np.loadtxt(osp.join(path, "test_idx-{}.txt".format(i)),
+                              dtype=int)
+        train_idx = np.loadtxt(osp.join(path, "train_idx-{}.txt".format(i)),
+                              dtype=int)
+        cv.append((train_idx, test_idx))
+    p.dump(cv, open(dname+".cv", "wb"))
+        
 
 def pack(dname):
     """This function is meant to use in development. It uses torch_geometric 
@@ -27,5 +43,9 @@ def pack(dname):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dname")
-    args = parser.parse_args()
-    pack(args.dname)
+    parser.add_argument("--path", default=None)
+    args = parser.parse_args() 
+    if args.path: 
+        gin_cv(args.dname, args.path) 
+    else:
+        pack(args.dname)
