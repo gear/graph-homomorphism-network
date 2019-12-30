@@ -23,6 +23,32 @@ except:
     print("Please install homlib library to compute homomorphism.")
 
 
+ALL_DATA = ["MUTAG", "PTC_MR", "IMDB-BINARY", "IMDB-MULTI", "NCI1", "PROTEINS",
+            "REDDIT-BINARY", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", "COLLAB", "DD",
+            "ENZYMES", "NCI109", "BZR", "COX2", "BZR_MD", "COX2_MD"]
+
+
+# Number of node tags
+NUM_ATTR_TAG = {
+    "MUTAG": (0, 7),
+    "PTC_MR": (0, 18),
+    "IMDB-BINARY": (0, 0),
+    "IMDB-MULTI": (0, 0),
+    "NCI1": (0, 37),
+    "PROTEINS": (1, 3),
+    "REDDIT-BINARY": (0, 0),
+    "REDDIT-MULTI-5K": (0, 0),
+    "REDDIT-MULTI-12K": (0, 0),
+    "COLLAB": (0, 0),
+    "DD": (0, 89),
+    "ENZYMES": (18, 3),
+    "NCI109": (0, 38),
+    "BZR": (3, 53),
+    "BZR_MD": (0, 8),
+    "COX2_MD": (0, 7),
+}
+
+
 def get_scaler(scaler_name):
     """Utils to get data scaler by name"""
     scaler = None
@@ -135,6 +161,31 @@ def graph_type(g):
     else:
         raise TypeError("Unsupported graph type: {}".format(str(g)))
     #TODO(N): Add for graph-tool type if needed.
+
+
+def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
+    """Utility function to load packed TU datasets. This is used as a sanity 
+    check for the `load_tud_data` function below.
+    """
+    root_dir = os.path.expanduser(root_dir)
+    graphs = os.path.join(root_dir, dname+".graph")
+    graphs = pkl.load(open(graphs, "rb"))
+
+    X = os.path.join(root_dir, dname+".X")
+    X = pkl.load(open(X, "rb"))
+
+    y = os.path.join(root_dir, dname+".y")
+    y = pkl.load(open(y, "rb"))
+
+    num_attr, num_tags = NUM_ATTR_TAG[dname]
+
+    g_list = []
+    for i, g in enumerate(graphs):
+        g = S2VGraph(g, y[i], node_tags=X[i][:,num_attr:], 
+                     node_features=X[i][:,:num_attr], graph_feature=None)
+        g_list.append(g)
+    nclass = len(np.unique(y))
+    return g_list, nclass
 
 
 def load_tud_data(dset, combine_tag_feat=False, **kwargs):
