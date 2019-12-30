@@ -2,7 +2,8 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
-from utils import load_data, load_precompute, save_precompute, load_tud_data
+from utils import load_data, load_precompute, save_precompute,\
+                  load_tud_data, load_packed_tud
 from utils import get_scaler
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.svm import SVC
@@ -10,6 +11,7 @@ from sklearn.metrics import f1_score, accuracy_score
 from homomorphism import get_hom_profile
 
 TUD_datasets = {
+    "MUTAG",
     "COX2",
     "DD",
     "ENZYMES",
@@ -69,7 +71,7 @@ if __name__ == "__main__":
     svm_time = 0
     # Choose function to load data
     if args.dataset in TUD_datasets:
-        load_data = load_tud_data
+        load_data = load_packed_tud
     else:
         args.combine_feature_tag = False
     # If use labeled homomorphism, node tags of GIN loader must be one hot. 
@@ -149,8 +151,6 @@ if __name__ == "__main__":
                                 y_true=y_test, average=args.f1avg))
         a_acc.extend(acc)
     svm_time = time() - svm_time
-    ind = np.argmax(clf.cv_results_['mean_test_score'])
     print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.std(a_acc)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
     print("Time for SVM: {:.2f} sec".format(svm_time))
-    print("Best params: ", clf.best_params_)
