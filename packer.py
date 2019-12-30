@@ -30,7 +30,7 @@ def pack(dname):
     except:
         print("No X")
     y = np.array([g.y.numpy() for g in raw_data])
-    graphs = [to_networkx(g) for g in raw_data]
+    graphs = [to_networkx(g).to_undirected() for g in raw_data]
     p.dump(graphs, open(dname+".graph", "wb"))
     p.dump(y, open(dname+".y", "wb"))
     try:
