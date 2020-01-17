@@ -1,5 +1,5 @@
 from utils import nx2homg, tree_list, cycle_list,\
-                  path_list, graph_type
+                  path_list, graph_type, hom_profile
 import homlib as hl
 import networkx as nx
 import numpy as np
@@ -73,7 +73,7 @@ def hom(F, G, f_is_tree=False, density=False):
     If `f_is_tree`, then use the Python implementation of tree. This one is 
     10 times slower than homlib but can be parallelize with `multiprocessing`.
     """
-    assert graph_type(G) == "nx" and graph_type(F) == "nx", "Invalid type."
+    # assert graph_type(G) == "nx" and graph_type(F) == "nx", "Invalid type."
     # Default homomorphism function
     hom_func = hl.hom
     # Check if tree, then change the hom function
@@ -129,6 +129,13 @@ def explabeled_tree_profile(G, size=6, node_tags=None, **kwargs):
     return np.concatenate(hom_list)
 
 
+def homomorphism_profile(G, size=6, node_tags=None, **kwargs):
+    """Run profile for exponentially labeled trees."""
+    t_list = hom_profile(size)
+    hom_list = [hom(t, G) for t in t_list]
+    return hom_list
+
+
 def get_hom_profile(f_str):
     if f_str == "labeled_tree":
         return labeled_tree_profile
@@ -143,4 +150,4 @@ def get_hom_profile(f_str):
     elif f_str == "tree+cycle":
         return tree_cycle_profile
     else:
-        raise ValueError("{} is not a valid F class.".format(f_str))
+        return homomorphism_profile

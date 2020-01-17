@@ -144,6 +144,21 @@ def cycle_list(size=6, to_homlib=False):
     return c_list
 
 
+def hom_profile(size=5):
+    """Return a custom homomorphism profile.
+    Tree to size 5, cycle to size 5 by default."""
+    single_vertex = nx.Graph()
+    single_vertex.add_node(0)
+    tree_list = [tree for i in range(2,size+1) for tree in \
+                    nx.generators.nonisomorphic_trees(i)]
+    cycle_list = [nx.generators.cycle_graph(i) for i in range(3,size+1)]
+    f_list = [single_vertex]
+    f_list.extend(tree_list)
+    f_list.extend(cycle_list)
+    return f_list
+    
+
+
 def path_list(size=6, to_homlib=False):
     """Generate undirected paths up to size `size`. Parallel
     edges are not allowed."""
@@ -161,6 +176,36 @@ def graph_type(g):
     else:
         raise TypeError("Unsupported graph type: {}".format(str(g)))
     #TODO(N): Add for graph-tool type if needed.
+
+
+def gen_bipartite(num_graphs=200):
+    """Generate bipartite and non-bipartite graphs."""
+    bipartites = []
+    nonbipartites = []
+    y = []
+    for i in range(num_graphs):
+        np.random.seed(i)
+        num_nodes_u = np.random.randint(20,60)
+        num_nodes_b = np.random.randint(20,60)
+        p = np.random.random()
+        g = nx.algorithms.bipartite.random_graph(num_nodes_u, num_nodes_b, p, seed=i)
+        bipartites.append(g)
+        y.append(1)
+        g = nx.generators.erdos_renyi_graph(num_nodes_u+num_nodes_b, p, seed=i)
+        nonbipartites.append(g)  # Not 100% fix later
+        y.append(0)
+
+    g_list = []
+    for i, g in enumerate(bipartites+nonbipartites):
+        g = S2VGraph(g, y[i], node_tags=None, node_features=None, graph_feature=None)
+        g_list.append(g)
+    nclass = 2
+    return g_list, nclass
+    
+
+def load_synthetic_data(dname, root_dir='./data/synthetic'):
+    """Load synthetic datasets.
+    """
 
 
 def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):

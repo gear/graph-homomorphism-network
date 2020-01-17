@@ -54,7 +54,7 @@ parser.add_argument("--scaler", type=str, default="standard",
 
 
 # Default grid for SVC
-Cs = np.logspace(-3, 5, 250)
+Cs = np.logspace(-3, 5, 10)
 gammas = ['scale']
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
