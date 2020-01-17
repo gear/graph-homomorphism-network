@@ -178,22 +178,43 @@ def graph_type(g):
     #TODO(N): Add for graph-tool type if needed.
 
 
+def gen_config(num_graphs=200):
+    """Gen bipartite with degree sequences"""
+    bipartites = []
+    nonbipartites = []
+    y = [1] * num_graphs + [0] * num_graphs
+    for i in range(num_graphs):
+        num_nodes_u = 40
+        aseq = [15] * num_nodes_u
+        bseq = [int(sum(aseq)/30)] * 30
+        g = nx.algorithms.bipartite.configuration_model(aseq, bseq, seed=i)
+        bipartites.append(g)
+        g = nx.generators.erdos_renyi_graph(40+30, 0.7, seed=i)
+        nonbipartites.append(g)  # Not 100% fix later
+
+    g_list = []
+    for i, g in enumerate(bipartites+nonbipartites):
+        g = S2VGraph(g, y[i], node_tags=None, node_features=None, graph_feature=None)
+        g_list.append(g)
+    nclass = 2
+    return g_list, nclass
+    
+
+
 def gen_bipartite(num_graphs=200):
     """Generate bipartite and non-bipartite graphs."""
     bipartites = []
     nonbipartites = []
-    y = []
+    y = [1] * num_graphs + [0] * num_graphs
     for i in range(num_graphs):
         np.random.seed(i)
         num_nodes_u = np.random.randint(20,60)
         num_nodes_b = np.random.randint(20,60)
-        p = np.random.random()
+        p = 0.2
         g = nx.algorithms.bipartite.random_graph(num_nodes_u, num_nodes_b, p, seed=i)
         bipartites.append(g)
-        y.append(1)
         g = nx.generators.erdos_renyi_graph(num_nodes_u+num_nodes_b, p, seed=i)
         nonbipartites.append(g)  # Not 100% fix later
-        y.append(0)
 
     g_list = []
     for i, g in enumerate(bipartites+nonbipartites):

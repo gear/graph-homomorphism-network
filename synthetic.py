@@ -5,9 +5,10 @@ from time import time
 from utils import load_data, load_precompute, save_precompute,\
                   load_tud_data, load_packed_tud
 from utils import get_scaler
-from utils import gen_bipartite
+from utils import gen_bipartite, gen_config
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, accuracy_score
 from homomorphism import get_hom_profile
 
@@ -45,8 +46,10 @@ parser.add_argument("--scaler", type=str, default="standard",
 
 
 # Default grid for SVC
-Cs = np.logspace(-5, 6, 120)
-gammas = np.logspace(-5, 1, 20)
+#Cs = np.logspace(-5, 6, 120)
+#gammas = np.logspace(-5, 1, 20)
+Cs = [1.0, 10.0, 100.0]
+gammas = [1.0]
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
 
@@ -58,7 +61,7 @@ if __name__ == "__main__":
     learn_time = 0
     # Choose function to load data
     if args.dataset == "bipartite":
-        data, nclass = gen_bipartite(args.ngraphs)
+        data, nclass = gen_config(num_graphs=args.ngraphs)
     y = [d.label for d in data]
     y = np.array(y)
     node_features = None
@@ -71,8 +74,11 @@ if __name__ == "__main__":
                                density=args.hom_density,
                                node_tags=None)
         X.append(profile)
-        hom_time = time() - hom_time
+    hom_time = time() - hom_time
     X = np.array(X, dtype=float)
+
+    np.save('X.np', X)
+    np.save('y.np', y)
 
     ### Train SVC 
     print("Training SVM...")
@@ -83,14 +89,16 @@ if __name__ == "__main__":
         acc = []
         skf = StratifiedKFold(n_splits=10, shuffle=True)
         scaler = get_scaler(args.scaler)
-        X = scaler.fit_transform(X)
-        grid_search = GridSearchCV(SVC(kernel=args.kernel), param_grid, 
+        #X = scaler.fit_transform(X)
+        grid_search = GridSearchCV(RandomForestClassifier(), 
+                                   {'n_estimators': [100]}, 
                                            iid=False, cv=skf, 
-                                           n_jobs=8)
+                                           n_jobs=12)
         grid_search.fit(X,y)
         idx = grid_search.best_index_
         a_acc.append(grid_search.cv_results_['mean_test_score'][idx])
         a_std.append(grid_search.cv_results_['std_test_score'][idx])
+        print(grid_search.best_estimator_.feature_importances_)
     learn_time = time() - learn_time
 
     print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.mean(a_std)))
