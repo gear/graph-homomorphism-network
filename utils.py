@@ -208,12 +208,10 @@ def gen_bipartite(num_graphs=200):
     y = [1] * num_graphs + [0] * num_graphs
     for i in range(num_graphs):
         np.random.seed(i)
-        num_nodes_u = np.random.randint(20,60)
-        num_nodes_b = np.random.randint(20,60)
-        p = 0.2
-        g = nx.algorithms.bipartite.random_graph(num_nodes_u, num_nodes_b, p, seed=i)
+        u = np.random.randint(20,60)
+        g = nx.star_graph(u-1)
         bipartites.append(g)
-        g = nx.generators.erdos_renyi_graph(num_nodes_u+num_nodes_b, p, seed=i)
+        g = nx.complete_graph(u)
         nonbipartites.append(g)  # Not 100% fix later
 
     g_list = []
