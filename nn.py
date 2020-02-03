@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import defaultdict
 from torch.utils.data import DataLoader
+from logger import Logger
 
 
 parser = argparse.ArgumentParser("Homomorphism Network with tree profile.")
@@ -49,9 +50,9 @@ def train_val(net, tdset, vdset, args):
         correct_count = 0
         i = 0
         for (batch_graphs, batch_X), batch_y in train_generator:
+            net.train()
             logger["epoch"].append(epoch)
             logger["batch"].append(i)
-            net.train()
             optimizer.zero_grad()
             out = net(batch_graphs, batch_X)
             train_loss = loss_f(out, batch_y)
@@ -61,13 +62,13 @@ def train_val(net, tdset, vdset, args):
             logger["batch_loss"].append(train_loss.item())
             logger["train_accuracy"].append(correct_count.item()/len(tdset))
             i += 1
-        with torch.no_grad():
-            for (graphs, X), y in val_generator:
-                net.eval()
-                out = net(graphs, X)
-                val_loss = loss_f(out, y)
-                corrects = out.argmax(1).eq(y).double().sum()
-                logger["val_accuracy"].append(corrects.item()/len(vdset))
+            with torch.no_grad():
+                for (graphs, X), y in val_generator:
+                    net.eval()
+                    out = net(graphs, X)
+                    val_loss = loss_f(out, y)
+                    corrects = out.argmax(1).eq(y).double().sum()
+                    logger["val_accuracy"].append(corrects.item()/len(vdset))
 
     return net, logger
 
@@ -79,11 +80,14 @@ if __name__ == "__main__":
     # Dataloader 
     dataset = torch_data(args.dataset, num_folds=10)
 
+    # Logger
+    log = Logger(args)
+
     i = 1
     for tdset, vdset in dataset.folds():
         net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
         net.weights_init()
         print("Fold {}...".format(i))
         net, logger = train_val(net, tdset, vdset, args)
+        log.write_log(logger, i)
         i+=1
-        print(logger)
