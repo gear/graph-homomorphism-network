@@ -75,12 +75,10 @@ if __name__ == "__main__":
     # Dataloader 
     dataset = torch_data(args.dataset, num_folds=10)
 
-    # Net
-    net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
-    net.weights_init()
-
     i = 1
     for tdset, vdset in dataset.folds():
+        net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
+        net.weights_init()
         print("Fold {}...".format(i))
         net, logger = train_val(net, tdset, vdset, args)
         i+=1
