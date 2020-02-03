@@ -15,13 +15,15 @@ from collections import defaultdict
 from torch.utils.data import DataLoader
 
 
-parser = argparse.ArgumentParser("Homomorphism Network with tree profile. This script runs 10-folds cv.")
+parser = argparse.ArgumentParser("Homomorphism Network with tree profile.")
 parser.add_argument("--dataset", type=str, help="Dataset name to run.")
 # Params for neural nets
-parser.add_argument("--max_tree_size", type=int, default=6, help="Max tree size.")
+parser.add_argument("--max_tree_size", type=int, default=6, 
+                    help="Max tree size.")
 parser.add_argument("--hdim", type=int, default=16, help="Hidden dim for clf.")
 # Params for training
-parser.add_argument("--epoch", type=int, default=10, help="Number of training epochs.")
+parser.add_argument("--epoch", type=int, default=10, 
+                    help="Number of training epochs.")
 parser.add_argument("--lr", type=float, default=0.003, help="Learning rate.")
 parser.add_argument("--wd", type=float, default=1e-4, help="Weight decay.")
 parser.add_argument("--bs", type=int, default=32, help="Batch size.")
@@ -35,8 +37,10 @@ def graph_collate(batch):
 
 
 def train_val(net, tdset, vdset, args):
-    train_generator = DataLoader(tdset, batch_size=args.bs, collate_fn=graph_collate)
-    val_generator = DataLoader(vdset, batch_size=len(vdset), collate_fn=graph_collate)
+    train_generator = DataLoader(tdset, batch_size=args.bs, 
+                                 collate_fn=graph_collate)
+    val_generator = DataLoader(vdset, batch_size=len(vdset), 
+                               collate_fn=graph_collate)
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.wd)
     loss_f = nn.CrossEntropyLoss()
     logger = defaultdict(list)
