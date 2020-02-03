@@ -5,6 +5,8 @@ import torch.nn.functional as nnf
 from utils import load_data, load_tud_data 
 import networkx as nx
 from collections.abc import Iterable
+import numpy as np
+
 
 class HomConv(nn.Module):
     """Homomorphism convolution layer (F,phi).
@@ -24,18 +26,29 @@ class HomConv(nn.Module):
         nn.init.normal_(self.weight, mean=0, std=1)
         nn.init.zeros_(self.bias)
 
-    def forward(self, G):
+    def forward(self, G, X=None):
         # TODO: density? density for others, raw count for V and E?
         n = G.number_of_nodes()
         nG = G.nodes()
         def rec(x, p):
-            hom_x = T.ones(n).float()
+            if X is None:
+                hom_x = T.ones(n).reshape(1,-1).float()
+            else:
+                hom_x = T.tensor(X).transpose(0,1).float()
             for y in self.F.neighbors(x):
                 if y == p:
                     continue
-                hom_y = rec(y, x).view(-1)  # No cycles
-                hom_x = hom_x * T.tensor([T.sum(hom_y[list(G.neighbors(a))]) for a in nG])
-            return nnf.relu(T.matmul(self.weight, hom_x.view(1,-1)) + self.bias)
+                hom_y = rec(y, x)
+                if X is None:
+                    aux = T.tensor([T.sum(hom_y[:, list(G.neighbors(a))]) for a in nG])
+                else:
+                    aux = T.tensor([T.sum(hom_y[:, list(G.neighbors(a))]) for a in nG])
+                hom_x = hom_x * aux
+                if len(hom_x.size()) == 1:
+                    hom_x = hom_x.reshape(1,-1)
+            res = T.matmul(self.weight, hom_x).transpose(0,1) + self.bias
+            act = nnf.relu(res).transpose(0,1)
+            return act
         return T.sum(rec(0,-1))
 
 
@@ -44,11 +57,11 @@ class HNet(nn.Module):
     This network only contains one layer of homomorphism convolution
     since its expressive power lies at its width.
     """
-    def __init__(self, fdim, nclass, hdim=16, tree_max_size=6):
+    def __init__(self, fdim, nclass, hdim=16, max_tree_size=6):
         super().__init__()
         self.hom_conv_modules = []
         self.Fs = [nx.generators.empty_graph(1)]
-        for i in range(2, tree_max_size+1):
+        for i in range(2, max_tree_size+1):
             self.Fs.extend(nx.generators.nonisomorphic_trees(i))
         for F in self.Fs:
             self.hom_conv_modules.append(HomConv(F, fdim))
@@ -61,14 +74,14 @@ class HNet(nn.Module):
         for m in self.hom_conv_modules:
             m.weights_init()
 
-    def hom(self, G):
-        return [m(G) for m in self.hom_conv_modules]
+    def hom(self, G, X=None):
+        return [m(G, X) for m in self.hom_conv_modules]
 
-    def forward(self, G):
-        if isinstance(G, Iterable):
-            emb = T.tensor([self.hom(g) for g in G])
+    def forward(self, G, X=None):
+        if isinstance(G, list):
+            emb = T.tensor([self.hom(g, x) for g, x in zip(G, X)])
         else:
-            emb = T.tensor(self.hom(G)).unsqueeze(0)
+            emb = T.tensor(self.hom(G, X)).unsqueeze(0)
         emb = self.bn(emb)
         emb = nnf.relu(self.linear1(emb))
         emb = self.linear2(emb)
@@ -95,9 +108,14 @@ def test_HomConv():
     hom_conv.weights_init()
     hom_conv.train()
     print(hom_conv(G))
+    hom_conv = HomConv(F, 3)
+    hom_conv.weights_init()
+    hom_conv.train()
+    X = np.random.randn(G.number_of_nodes(), 3)
+    print(hom_conv(G,X))
 
 
 if __name__ == "__main__":
-    #test_HomConv()
-    test_HNet()
+    test_HomConv()
+    #test_HNet()
 
