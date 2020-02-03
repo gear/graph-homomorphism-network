@@ -120,3 +120,4 @@ packed/
 
 # pickles
 *.pkl
+data/
