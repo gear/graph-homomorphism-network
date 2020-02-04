@@ -12,12 +12,12 @@ class Logger(object):
         self.log_file = os.path.join(self.log_file, self.id+".csv")
         with open(self.log_file, "w") as f:
             for k, v in self.args.items():
-                f.write("# {}: {}".format(k, v))
+                f.write("# {}: {}\n".format(k, v))
 
     def write_log(self, log_dict, fold_id): 
         fold_data = [fold_id] * len(log_dict["epoch"])
         log_dict["fold"] = fold_data
         data = pd.DataFrame.from_dict(log_dict)
-        header = True if fold_id == 0 else False
+        header = True if fold_id == 1 else False
         data.to_csv(self.log_file, index=False, mode="a", header=header)
         
