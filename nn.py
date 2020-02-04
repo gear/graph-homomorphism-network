@@ -84,9 +84,19 @@ if __name__ == "__main__":
     log = Logger(args)
 
     i = 1
+    #for tdset, vdset in dataset.folds():
+    #    net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
+    #    net.weights_init()
+    #    print("Fold {}...".format(i))
+    #    net, logger = train_val(net, tdset, vdset, args)
+    #    log.write_log(logger, i)
+    #    i+=1
     for tdset, vdset in dataset.folds():
         net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
-        net.weights_init()
+        net.test_init()
+        for m in net.hom_conv_modules:
+            m.weight.requires_grad = False 
+            m.bias.requires_grad = False
         print("Fold {}...".format(i))
         net, logger = train_val(net, tdset, vdset, args)
         log.write_log(logger, i)
