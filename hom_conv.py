@@ -23,7 +23,7 @@ class HomConv(nn.Module):
         self.fdim = fdim
     
     def weights_init(self):
-        nn.init.normal_(self.weight, mean=0, std=1)
+        nn.init.eye_(self.weight, mean=0, std=1)
         nn.init.zeros_(self.bias)
 
     def forward(self, G, X=None):
@@ -35,21 +35,22 @@ class HomConv(nn.Module):
                 hom_x = T.ones(n).reshape(1,-1).float()
             else:
                 hom_x = T.tensor(X).transpose(0,1).float()
+            hom_x = T.matmul(self.weight, hom_x).transpose(0,1) + self.bias
+            hom_x = nnf.relu(hom_x).transpose(0,1)
             for y in self.F.neighbors(x):
                 if y == p:
                     continue
                 hom_y = rec(y, x)
-                if X is None:
-                    aux = T.tensor([T.sum(hom_y[:, list(G.neighbors(a))]) for a in nG])
-                else:
-                    aux = T.tensor([T.sum(hom_y[:, list(G.neighbors(a))]) for a in nG])
+                aux = T.tensor([T.sum(hom_y[:, list(G.neighbors(a))]) for a in nG])
                 hom_x = hom_x * aux
                 if len(hom_x.size()) == 1:
                     hom_x = hom_x.reshape(1,-1)
-            res = T.matmul(self.weight, hom_x).transpose(0,1) + self.bias
-            act = nnf.relu(res).transpose(0,1)
-            return act
+            return hom_x
         return T.sum(rec(0,-1))
+
+    def test_init(self):
+        nn.init.eye_(self.weight)
+        nn.init.zeros_(self.bias)
 
 
 class HNet(nn.Module):
@@ -87,6 +88,11 @@ class HNet(nn.Module):
         emb = self.linear2(emb)
         return emb
 
+    def test_init(self):
+        """Init weights to identity and bias to zero"""
+        for m in self.hom_conv_modules:
+            m.test_init()
+        
 
 def test_HNet():
     net = HNet(1, 2)
