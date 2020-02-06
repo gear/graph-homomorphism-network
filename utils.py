@@ -194,7 +194,8 @@ def gen_config(num_graphs=200):
 
     g_list = []
     for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, node_features=None, graph_feature=None)
+        g = S2VGraph(g, y[i], node_tags=None, 
+                     node_features=None, graph_feature=None)
         g_list.append(g)
     nclass = 2
     return g_list, nclass
@@ -216,15 +217,26 @@ def gen_bipartite(num_graphs=200):
 
     g_list = []
     for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, node_features=None, graph_feature=None)
+        g = S2VGraph(g, y[i], node_tags=None, 
+                     node_features=None, graph_feature=None)
         g_list.append(g)
     nclass = 2
     return g_list, nclass
     
 
-def load_synthetic_data(dname, root_dir='./data/synthetic'):
+def load_synthetic_data(dname, root_dir="./data/"):
     """Load synthetic datasets.
     """
+    graphs = pkl.load(open(root_dir+dname+".graph", "rb"))
+    y = pkl.load(open(root_dir+dname+".y", "rb"))
+    nclass = len(set(y)) 
+
+    g_list = []
+    for i, g in enumerate(graphs):
+        g = S2VGraph(g, y[i], node_tags=None, 
+                     node_features=None, graph_feature=None)
+        g_list.append(g)
+    return g_list, nclass
 
 
 def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
