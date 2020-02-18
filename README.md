@@ -6,6 +6,7 @@
 ```
 numpy
 scikit-learn
+hyperopt-sklearn
 homlib (for non-tree homomorphism)
 ```
 
@@ -41,6 +42,6 @@ python tud.py --dataset [MUTAG,IMDB-BINARY,IMDB-MULTI]
 Example:
 ```
 python synthetic.py --dataset [bipartite,paulus25,csl]
-              --hom_type [tree,cycle]
+              --hom_type [tree,cycle,label_tree]
               --hom_size [6,8]
 ```
