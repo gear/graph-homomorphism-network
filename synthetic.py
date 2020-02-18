@@ -62,7 +62,7 @@ if __name__ == "__main__":
     # Choose function to load data
     if args.dataset == "bipartite":
         data, nclass = gen_config(num_graphs=args.ngraphs)
-    if args.dataset == "CSL":
+    if args.dataset in ["CSL", "PAULUS25"]:
         data, nclass = load_synthetic_data(args.dataset)
     y = [d.label for d in data]
     y = np.array(y)
