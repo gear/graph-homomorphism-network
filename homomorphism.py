@@ -7,10 +7,7 @@ from multiprocessing import Pool
 
 
 def hom_tree(F, G):
-    """Specialized tree homomorphism in Python (serializable).
-    By: Takanori Maehara (maehara@prefield.com)
-
-    Add `indexed` parameter to count for each index individually.
+    """Algorithm 1 in our paper (without vertex features)
     """
     def rec(x, p):
         hom_x = np.ones(len(G.nodes()), dtype=float)
@@ -26,7 +23,7 @@ def hom_tree(F, G):
 
 
 def hom_tree_labeled(F, G, node_tags=None):
-    """Tree homomorphism with node labels (tags).
+    """Algorithm 1 in our paper (with vertex features)
     """
     if node_tags is None:
         print("Warning: Missing node tags.")
@@ -38,12 +35,12 @@ def hom_tree_labeled(F, G, node_tags=None):
         for y in F.neighbors(x):
             if y == p:
                 continue
-            hom_y = rec(y, x)
+            hom_y = rec(y, x).reshape(1,-1)
             aux = [np.sum(hom_y[:,list(G.neighbors(a))]) for a in G.nodes()]
             hom_x *= np.array(aux)
         return hom_x
     hom_r = rec(0, -1)
-    return np.sum(hom_r, axis=1)
+    return np.sum(hom_r, axis=0)
 
 
 def hom_tree_explabeled(F, G, node_tags=None, exp=np.e):
@@ -137,9 +134,9 @@ def homomorphism_profile(G, size=6, node_tags=None, **kwargs):
 
 
 def get_hom_profile(f_str):
-    if f_str == "labeled_tree":
+    if f_str == "label_tree":
         return labeled_tree_profile
-    elif f_str == "explabeled_tree":
+    elif f_str == "explabel_tree":
         return explabeled_tree_profile
     elif f_str == "tree":
         return tree_profile

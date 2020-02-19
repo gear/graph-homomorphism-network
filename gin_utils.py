@@ -28,6 +28,7 @@ ALL_DATA = ["MUTAG", "PTC_MR", "IMDB-BINARY", "IMDB-MULTI", "NCI1", "PROTEINS",
             "ENZYMES", "NCI109", "BZR", "COX2", "BZR_MD", "COX2_MD"]
 
 
+
 # Number of node tags
 NUM_ATTR_TAG = {
     "MUTAG": (0, 7),
@@ -130,7 +131,6 @@ def tree_list(size=6, to_homlib=False):
     """Generate nonisomorphic trees up to size `size`."""
     t_list = [tree for i in range(2,size+1) for tree in \
                        nx.generators.nonisomorphic_trees(i)]
-    t_list.append(nx.empty_graph(1))
     if to_homlib:
         t_list = [nx2homg(t) for t in t_list]
     return t_list
@@ -140,7 +140,6 @@ def cycle_list(size=6, to_homlib=False):
     """Generate undirected cycles up to size `size`. Parallel
     edges are not allowed."""
     c_list = [nx.generators.cycle_graph(i) for i in range(2,size+1)]
-    c_list.append(nx.empty_graph(1))
     if to_homlib:
         c_list = [nx2homg(c) for c in c_list]
     return c_list
@@ -196,49 +195,129 @@ def gen_config(num_graphs=200):
 
     g_list = []
     for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, 
-                     node_features=None, graph_feature=None)
+        g = S2VGraph(g, y[i], node_tags=None, node_features=None, graph_feature=None)
         g_list.append(g)
     nclass = 2
     return g_list, nclass
-    
 
 
-def gen_bipartite(num_graphs=200):
-    """Generate bipartite and non-bipartite graphs."""
-    bipartites = []
-    nonbipartites = []
-    y = [1] * num_graphs + [0] * num_graphs
-    for i in range(num_graphs):
-        np.random.seed(i)
-        u = np.random.randint(20,60)
-        g = nx.star_graph(u-1)
-        bipartites.append(g)
-        g = nx.complete_graph(u)
-        nonbipartites.append(g)  # Not 100% fix later
-
-    g_list = []
-    for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, 
-                     node_features=None, graph_feature=None)
-        g_list.append(g)
-    nclass = 2
-    return g_list, nclass
-    
-
-def load_synthetic_data(dname, root_dir="./data/"):
-    """Load synthetic datasets.
-    """
-    graphs = pkl.load(open(root_dir+dname+".graph", "rb"))
-    y = pkl.load(open(root_dir+dname+".y", "rb"))
-    nclass = len(set(y)) 
-
+def get_paulus25():
+    graphs = pkl.load(open("./data/PAULUS25.graph", "rb"))
+    y = pkl.load(open("./data/PAULUS25.y", "rb"))
     g_list = []
     for i, g in enumerate(graphs):
         g = S2VGraph(g, y[i], node_tags=None, 
                      node_features=None, graph_feature=None)
         g_list.append(g)
+    nclass = 14
+    #add labels and edge_mat       
+    for g in g_list:
+        g.neighbors = [[] for i in range(len(g.g))]
+        for i, j in g.g.edges():
+            g.neighbors[i].append(j)
+            g.neighbors[j].append(i)
+        degree_list = []
+        for i in range(len(g.g)):
+            g.neighbors[i] = g.neighbors[i]
+            degree_list.append(len(g.neighbors[i]))
+        g.max_neighbor = max(degree_list)
+
+        edges = [list(pair) for pair in g.g.edges()]
+        edges.extend([[i, j] for j, i in edges])
+
+        deg_list = list(dict(g.g.degree(range(len(g.g)))).values())
+        g.edge_mat = torch.LongTensor(edges).transpose(0,1)
+
+    for g in g_list:
+        g.node_tags = list(dict(g.g.degree).values())
+    #Extracting unique tag labels   
+    tagset = set([])
+    for g in g_list:
+        tagset = tagset.union(set(g.node_tags))
+
+    tagset = list(tagset)
+    tag2index = {tagset[i]:i for i in range(len(tagset))}
+
+    for g in g_list:
+        g.node_features = torch.zeros(len(g.node_tags), len(tagset))
+        g.node_features[range(len(g.node_tags)),\
+                        [tag2index[tag] for tag in g.node_tags]] = 1
+
+    if True:
+        nmax = max(max(g.node_tags) for g in g_list) + 1
+        for g in g_list:
+            g.node_tags = torch.from_numpy(np.array(to_onehot(np.array(g.node_tags), nmax), dtype=np.float32))
     return g_list, nclass
+    
+
+def gen_bipartite(num_graphs=200, perm_frac=0.2, p=0.2):
+    """Generate bipartite and non-bipartite graphs."""
+    bipartites = []
+    nonbipartites = []
+    for i in range(num_graphs):
+        num_nodes = np.random.randint(40, 101)
+        g = nx.bipartite.generators.random_graph(num_nodes, num_nodes, p)
+        if perm_frac > 0:
+            num_swap = int(perm_frac * g.number_of_edges())
+            g = _swap_edges(g , num_swap)
+        bipartites.append(g)
+        num_nodes = np.random.randint(40, 101)
+        g = nx.generators.erdos_renyi_graph(2*num_nodes, p/2)
+        nonbipartites.append(g)
+
+    g_list = []
+    for i, g in enumerate(bipartites):
+        g = S2VGraph(g, 1, node_tags=None, 
+                     node_features=None, graph_feature=None)
+        g_list.append(g)
+    for i, g in enumerate(nonbipartites):
+        g = S2VGraph(g, 0, node_tags=None, 
+                     node_features=None, graph_feature=None)
+        g_list.append(g)
+    nclass = 2
+    #add labels and edge_mat       
+    for g in g_list:
+        g.neighbors = [[] for i in range(len(g.g))]
+        for i, j in g.g.edges():
+            g.neighbors[i].append(j)
+            g.neighbors[j].append(i)
+        degree_list = []
+        for i in range(len(g.g)):
+            g.neighbors[i] = g.neighbors[i]
+            degree_list.append(len(g.neighbors[i]))
+        g.max_neighbor = max(degree_list)
+
+        edges = [list(pair) for pair in g.g.edges()]
+        edges.extend([[i, j] for j, i in edges])
+
+        deg_list = list(dict(g.g.degree(range(len(g.g)))).values())
+        g.edge_mat = torch.LongTensor(edges).transpose(0,1)
+
+    for g in g_list:
+        g.node_tags = list(dict(g.g.degree).values())
+    #Extracting unique tag labels   
+    tagset = set([])
+    for g in g_list:
+        tagset = tagset.union(set(g.node_tags))
+
+    tagset = list(tagset)
+    tag2index = {tagset[i]:i for i in range(len(tagset))}
+
+    for g in g_list:
+        g.node_features = torch.zeros(len(g.node_tags), len(tagset))
+        g.node_features[range(len(g.node_tags)),\
+                        [tag2index[tag] for tag in g.node_tags]] = 1
+
+    if True:
+        nmax = max(max(g.node_tags) for g in g_list) + 1
+        for g in g_list:
+            g.node_tags = torch.from_numpy(np.array(to_onehot(np.array(g.node_tags), nmax), dtype=np.float32))
+    return g_list, nclass
+    
+
+def load_synthetic_data(dname, root_dir='./data/synthetic'):
+    """Load synthetic datasets.
+    """
 
 
 def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
@@ -264,6 +343,26 @@ def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
         g_list.append(g)
     nclass = len(np.unique(y))
     return g_list, nclass
+
+
+def _swap_edges(g, num_swap):
+    edges = list(g.edges)
+    nodes = list(g.nodes)
+    upper = nodes[:int(g.number_of_nodes()/2)]
+    lower = nodes[int(g.number_of_nodes()/2):]
+    to_change = [random.choice(edges) for _ in range(num_swap)]
+    g.remove_edges_from(to_change)
+    for _ in range(num_swap):
+        u, v = 0, 0
+        if random.random() > 0.5:
+            sampler = upper
+        else:
+            sampler = lower
+        while u == v:
+            u = random.choice(sampler)
+            v = random.choice(sampler)
+        g.add_edge(u,v)
+    return g
 
 
 def load_tud_data(dset, combine_tag_feat=False, **kwargs):
@@ -470,7 +569,7 @@ def load_data(dataset, degree_as_tag, onehot_tags=False, **kwargs):
     if onehot_tags:
         nmax = max(max(g.node_tags) for g in g_list) + 1
         for g in g_list:
-            g.node_tags = to_onehot(np.array(g.node_tags), nmax)
+            g.node_tags = torch.Tensor(to_onehot(np.array(g.node_tags), nmax))
 
     return g_list, len(label_dict)
 
