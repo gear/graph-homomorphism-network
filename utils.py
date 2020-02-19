@@ -13,11 +13,6 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler,\
 from sklearn.feature_extraction.text import TfidfTransformer
 
 try:
-    from graph_tool.all import Graph as gtGraph
-except:
-    print("graph-tool is needed for subgraph density (optional).")
-
-try:
     from homlib import Graph as hlGraph
 except:
     print("Please install homlib library to compute homomorphism.")
@@ -180,29 +175,6 @@ def graph_type(g):
     #TODO(N): Add for graph-tool type if needed.
 
 
-def gen_config(num_graphs=200):
-    """Gen bipartite with degree sequences"""
-    bipartites = []
-    nonbipartites = []
-    y = [1] * num_graphs + [0] * num_graphs
-    for i in range(num_graphs):
-        num_nodes_u = 40
-        aseq = [15] * num_nodes_u
-        bseq = [int(sum(aseq)/30)] * 30
-        g = nx.algorithms.bipartite.configuration_model(aseq, bseq, seed=i)
-        bipartites.append(g)
-        g = nx.generators.erdos_renyi_graph(40+30, 0.7, seed=i)
-        nonbipartites.append(g)  # Not 100% fix later
-
-    g_list = []
-    for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, 
-                     node_features=None, graph_feature=None)
-        g_list.append(g)
-    nclass = 2
-    return g_list, nclass
-    
-
 
 def gen_bipartite(num_graphs=200):
     """Generate bipartite and non-bipartite graphs."""
@@ -241,7 +213,7 @@ def load_synthetic_data(dname, root_dir="./data/"):
     return g_list, nclass
 
 
-def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
+def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/'):
     """Utility function to load packed TU datasets. This is used as a sanity 
     check for the `load_tud_data` function below.
     """
@@ -250,17 +222,18 @@ def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
     graphs = pkl.load(open(graphs, "rb"))
 
     X = os.path.join(root_dir, dname+".X")
-    X = pkl.load(open(X, "rb"))
+    try:
+        X = pkl.load(open(X, "rb"))
+    except FileNotFoundError:
+        X = None
 
     y = os.path.join(root_dir, dname+".y")
     y = pkl.load(open(y, "rb"))
 
-    num_attr, num_tags = NUM_ATTR_TAG[dname]
-
     g_list = []
     for i, g in enumerate(graphs):
-        g = S2VGraph(g, y[i], node_tags=X[i][:,num_attr:], 
-                     node_features=X[i][:,:num_attr], graph_feature=None)
+        g = S2VGraph(g, y[i], node_tags=X, 
+                     graph_feature=None)
         g_list.append(g)
     nclass = len(np.unique(y))
     return g_list, nclass

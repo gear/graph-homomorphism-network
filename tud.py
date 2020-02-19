@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
-from utils import load_data, get_scaler
+from utils import load_data, get_scaler, load_packed_tud
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score
 from homomorphism import get_hom_profile
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     hom_time = 0
     clf_time = 0
-    data, nclass = load_data(args.dataset, False)
+    data, nclass = load_packed_tud(args.dataset, False)
     X = []
     y = [d.label for d in data]
     y = np.array(y)
