@@ -1,9 +1,12 @@
 from utils import nx2homg, tree_list, cycle_list,\
                   path_list, graph_type, hom_profile
-import homlib as hl
 import networkx as nx
 import numpy as np
-from multiprocessing import Pool
+
+try:
+    import homlib as hl
+except:
+    print("Please install homlib. Without homlib only tree_hom is available!")
 
 
 def hom_tree(F, G):
