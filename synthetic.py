@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser('Synthetic data experiments.')
 # Data loader
 parser.add_argument("--dataset", type=str, help="Synthetic dataset name to run.")
 parser.add_argument("--ngraphs", type=int, help="Number of graph per class.",
-                    default=200)
+                    default=100)
 # Parameters for homomorphism
 parser.add_argument("--hom_type", type=str, help="Type of homomorphism.")
 parser.add_argument("--hom_size", type=int, default=6,
