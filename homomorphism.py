@@ -38,12 +38,12 @@ def hom_tree_labeled(F, G, node_tags=None):
         for y in F.neighbors(x):
             if y == p:
                 continue
-            hom_y = rec(y, x).reshape(1,-1)
+            hom_y = rec(y, x)
             aux = [np.sum(hom_y[:,list(G.neighbors(a))]) for a in G.nodes()]
             hom_x *= np.array(aux)
         return hom_x
     hom_r = rec(0, -1)
-    return np.sum(hom_r, axis=0)
+    return np.sum(hom_r, axis=1)
 
 
 def hom_tree_explabeled(F, G, node_tags=None, exp=np.e):
@@ -148,6 +148,6 @@ def get_hom_profile(f_str):
     elif f_str == "cycle":
         return cycle_profile
     elif f_str == "tree+cycle":
-        return tree_cycle_profile
+        return homomorphism_profile 
     else:
-        return homomorphism_profile
+        return None

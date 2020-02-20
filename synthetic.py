@@ -2,10 +2,9 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
-from utils import load_data, load_precompute, save_precompute,\
-                  load_tud_data, load_packed_tud, load_synthetic_data
+from utils import load_synthetic_data
 from utils import get_scaler
-from utils import gen_bipartite, gen_config
+from utils import gen_bipartite
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
@@ -48,7 +47,7 @@ parser.add_argument("--scaler", type=str, default="standard",
 # Default grid for SVC
 #Cs = np.logspace(-5, 6, 120)
 #gammas = np.logspace(-5, 1, 20)
-Cs = [1.0, 10.0, 100.0]
+Cs = [1.0]
 gammas = [1.0]
 class_weight = ['balanced']
 param_grid = {'C': Cs, 'gamma': gammas, 'class_weight': class_weight}
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     learn_time = 0
     # Choose function to load data
     if args.dataset == "bipartite":
-        data, nclass = gen_config(num_graphs=args.ngraphs)
+        data, nclass = gen_bipartite(num_graphs=args.ngraphs)
     if args.dataset in ["CSL", "PAULUS25"]:
         data, nclass = load_synthetic_data(args.dataset)
     y = [d.label for d in data]
@@ -78,9 +77,6 @@ if __name__ == "__main__":
         X.append(profile)
     hom_time = time() - hom_time
     X = np.array(X, dtype=float)
-
-    np.save('X.np', X)
-    np.save('y.np', y)
 
     ### Train SVC 
     print("Training SVM...")

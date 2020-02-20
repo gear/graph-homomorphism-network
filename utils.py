@@ -232,7 +232,7 @@ def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/'):
 
     g_list = []
     for i, g in enumerate(graphs):
-        g = S2VGraph(g, y[i], node_tags=X, 
+        g = S2VGraph(g, y[i], node_tags=X[i], 
                      graph_feature=None)
         g_list.append(g)
     nclass = len(np.unique(y))

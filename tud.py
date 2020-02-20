@@ -33,7 +33,7 @@ if __name__ == "__main__":
     data, nclass = load_packed_tud(args.dataset, False)
     X = []
     y = [d.label for d in data]
-    y = np.array(y)
+    y = np.array(y).ravel()
     hom_time = time()
     profile_func = get_hom_profile(args.hom_type)
     print("Computing {} homomorphism...".format(args.hom_type))
