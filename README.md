@@ -6,8 +6,8 @@
 ```
 numpy
 scikit-learn
-hyperopt-sklearn
 homlib (for non-tree homomorphism)
+hyperopt-sklearn (optional, accuracy improves if used)
 ```
 
 ### Datasets
@@ -34,7 +34,7 @@ for more commandline options.
 Example:
 ```
 python tud.py --dataset [MUTAG,IMDB-BINARY,IMDB-MULTI]
-              --hom_type [tree,cycle]
+              --hom_type [tree,cycle,label_tree]
               --hom_size [6,8]
 ```
 
@@ -42,6 +42,10 @@ python tud.py --dataset [MUTAG,IMDB-BINARY,IMDB-MULTI]
 Example:
 ```
 python synthetic.py --dataset [bipartite,paulus25,csl]
-              --hom_type [tree,cycle,label_tree]
+              --hom_type [tree,cycle]
               --hom_size [6,8]
 ```
+
+### Other methods
+Check `externals.py` and use `load_packed_tud` function to load CSL and PAULUS.
+Use `gen_bipartite` to generate bipartite graphs.
