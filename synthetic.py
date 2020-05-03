@@ -61,7 +61,7 @@ if __name__ == "__main__":
     learn_time = 0
     # Choose function to load data
     if args.dataset == "bipartite":
-        data, nclass = gen_config(num_graphs=args.ngraphs)
+        data, nclass = gen_bipartite(num_graphs=args.ngraphs, perm_frac=0.0)
     y = [d.label for d in data]
     y = np.array(y)
     node_features = None
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     np.save('y.np', y)
 
     ### Train SVC 
-    print("Training SVM...")
+    print("Training RF...")
     learn_time = time()
     a_acc = []  # All accuracies of num_run
     a_std = []  # All standard deviation
@@ -98,9 +98,8 @@ if __name__ == "__main__":
         idx = grid_search.best_index_
         a_acc.append(grid_search.cv_results_['mean_test_score'][idx])
         a_std.append(grid_search.cv_results_['std_test_score'][idx])
-        print(grid_search.best_estimator_.feature_importances_)
     learn_time = time() - learn_time
 
     print("Accuracy: {:.4f} +/- {:.4f}".format(np.mean(a_acc), np.mean(a_std)))
     print("Time for homomorphism: {:.2f} sec".format(hom_time))
-    print("Time for SVM: {:.2f} sec".format(learn_time))
+    print("Time for RF: {:.2f} sec".format(learn_time))

@@ -5,6 +5,7 @@ import numpy as np
 import random
 import torch
 import os
+import random
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler,\
@@ -200,31 +201,50 @@ def gen_config(num_graphs=200):
     return g_list, nclass
     
 
+def _swap_edges(g, num_swap):
+    edges = list(g.edges)
+    nodes = list(g.nodes)
+    upper = nodes[:int(g.number_of_nodes()/2)]
+    lower = nodes[int(g.number_of_nodes()/2):]
+    to_change = [random.choice(edges) for _ in range(num_swap)]
+    g.remove_edges_from(to_change)
+    for _ in range(num_swap):
+        u, v = 0, 0
+        if random.random() > 0.5:
+            sampler = upper
+        else:
+            sampler = lower
+        while u == v:
+            u = random.choice(sampler)
+            v = random.choice(sampler)
+        g.add_edge(u,v)
+    return g
 
-def gen_bipartite(num_graphs=200):
+
+def gen_bipartite(num_graphs=200, perm_frac=0.0, p=0.2):
     """Generate bipartite and non-bipartite graphs."""
     bipartites = []
     nonbipartites = []
-    y = [1] * num_graphs + [0] * num_graphs
     for i in range(num_graphs):
-        np.random.seed(i)
-        u = np.random.randint(20,60)
-        g = nx.star_graph(u-1)
+        num_nodes = np.random.randint(40,101)
+        g = nx.bipartite.generators.random_graph(num_nodes,num_nodes, p)
+        if perm_frac > 0:
+            num_swap = int(perm_frac * g.number_of_edges())
+            g = _swap_edges(g, num_swap)
         bipartites.append(g)
-        g = nx.complete_graph(u)
+        num_nodes = np.random.randint(40,101)
+        g = nx.generators.erdos_renyi_graph(2*num_nodes, p/2)
         nonbipartites.append(g)  # Not 100% fix later
 
     g_list = []
-    for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, node_features=None, graph_feature=None)
+    for g in bipartites:
+        g = S2VGraph(g, 1, node_tags=None, node_features=None, graph_feature=None)
+        g_list.append(g)
+    for g in nonbipartites:
+        g = S2VGraph(g, 0, node_tags=None, node_features=None, graph_feature=None)
         g_list.append(g)
     nclass = 2
     return g_list, nclass
-    
-
-def load_synthetic_data(dname, root_dir='./data/synthetic'):
-    """Load synthetic datasets.
-    """
 
 
 def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):

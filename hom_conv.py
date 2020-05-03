@@ -23,7 +23,7 @@ class HomConv(nn.Module):
         self.fdim = fdim
     
     def weights_init(self):
-        nn.init.eye_(self.weight, mean=0, std=1)
+        nn.init.eye_(self.weight)
         nn.init.zeros_(self.bias)
 
     def forward(self, G, X=None):
