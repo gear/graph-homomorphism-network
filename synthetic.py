@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from time import time
 from utils import load_data, load_precompute, save_precompute,\
-                  load_tud_data, load_packed_tud
+                  load_tud_data, load_packed_tud, load_synthetic_data
 from utils import get_scaler
 from utils import gen_bipartite, gen_config
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
@@ -61,7 +61,9 @@ if __name__ == "__main__":
     learn_time = 0
     # Choose function to load data
     if args.dataset == "bipartite":
-        data, nclass = gen_bipartite(num_graphs=args.ngraphs, perm_frac=0.0)
+        data, nclass = gen_config(num_graphs=args.ngraphs)
+    if args.dataset in ["CSL", "PAULUS25"]:
+        data, nclass = load_synthetic_data(args.dataset)
     y = [d.label for d in data]
     y = np.array(y)
     node_features = None
@@ -93,7 +95,7 @@ if __name__ == "__main__":
         grid_search = GridSearchCV(RandomForestClassifier(), 
                                    {'n_estimators': [100]}, 
                                            iid=False, cv=skf, 
-                                           n_jobs=12)
+                                           n_jobs=8)
         grid_search.fit(X,y)
         idx = grid_search.best_index_
         a_acc.append(grid_search.cv_results_['mean_test_score'][idx])
