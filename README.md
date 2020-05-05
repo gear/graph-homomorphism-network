@@ -1,6 +1,8 @@
 # graph homomorphism profile
 Proof of concept for graph homomorphism profile as feature.
-@maehara-san: The name of this repo is due to the simple proof paper, when we called it "network".
+http://arxiv.org/abs/2005.01214
+
+Note: There is a bug in homlib for atlas[100:].
 
 To run experiments, install required packages, then:
 
