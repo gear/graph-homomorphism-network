@@ -197,15 +197,21 @@ struct HomomorphismCounting {
 
 long long hom(Graph F, Graph G) {
   HomomorphismCounting solver(F, G);
-  return solver.run();
+  //return solver.run();
+  return -1;
 }
 
 
 int main() {
   int t = 10;
   Graph T(t);
-  for (int i = 1; i < t; ++i) 
-    T.addEdge(rand() % i, i);
+  T.addEdge(0,1);
+  T.addEdge(0,2);
+  T.addEdge(0,3);
+  T.addEdge(1,3);
+  T.addEdge(1,5);
+  T.addEdge(2,3);
+  T.addEdge(2,5);
 
   int n = 100;
   Graph G(n);

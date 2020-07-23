@@ -261,6 +261,19 @@ def load_synthetic_data(dname, root_dir="./data/"):
     return g_list, nclass
 
 
+def load_pickle(dname, root_dir="./data/"):
+    """Load datasets"""
+    X = None 
+    y = None 
+    graphs = None 
+    name = root_dir+dname
+    graphs = pkl.load(open(name+".graph", "rb"))
+    y = pkl.load(open(name+".y", "rb"))
+    if os.path.exists(name+".X"):
+        X = pkl.load(open(name+".X", "rb"))
+    return graphs, X, y
+
+
 def load_packed_tud(dname, combine_attr_tag=False, root_dir='./data/packed'):
     """Utility function to load packed TU datasets. This is used as a sanity 
     check for the `load_tud_data` function below.

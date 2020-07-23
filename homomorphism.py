@@ -90,6 +90,12 @@ def hom(F, G, f_is_tree=False, density=False):
     return hom_func(F, G) * scaler
 
 
+def atlas_profile(G, size=20, start=0, density=False, **kwargs):
+    """Run homomorphism count for each graph in the nx atlas"""
+    atlas_list = nx.atlas.graph_atlas_g()[start:start+size]
+    return [hom(ga, G, density=density) for ga in atlas_list]
+
+
 def tree_profile(G, size=6, density=False, **kwargs):
     """Run tree homomorphism profile for a single graph G."""
     t_list = tree_list(size, to_homlib=False)
@@ -149,5 +155,7 @@ def get_hom_profile(f_str):
         return cycle_profile
     elif f_str == "tree+cycle":
         return tree_cycle_profile
+    elif f_str == "atlas":
+        return atlas_profile
     else:
         return homomorphism_profile
