@@ -31,7 +31,7 @@ python svm.py --data mutag --hom feature_tree --size 8
 Cite us as:
 ```
 @InProceedings{
-    ghc-nt20, 
+    nt20ghc, 
     title = {Graph Homomorphism Convolution}, 
     author = {NT, Hoang and Maehara, Takanori}, 
     booktitle = {Proceedings of the 37th International Conference on Machine Learning}, 
