@@ -1,0 +1,6 @@
+networkx>=2.5
+numpy>=1.19.4
+pytest>=6.2.1
+scipy>=1.5.4
+-e .
+-e homlib
