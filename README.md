@@ -14,10 +14,11 @@ This script installs `homlib` and `ghc`.
 
 ## Download and pack data
 This package is not dependent on `torch-geometric` but we will use 
-`torch-geometric` to load and pack data. Run the following script:
+`torch-geometric` to load and pack data. Download `data.zip` from
 ```
-python get_data.py -d data
+https://drive.google.com/file/d/15w7UyqG_MjCqdRL2fA87m7-vanjddKNh/view?usp=sharing
 ```
+and extract to `data/`. For example MUTAG dataset should have: `data/MUTAG.graph`, `data/MUTAG.X`, and `data/MUTAG.y`. 
 
 ## Run experiments
 Experiment scripts are placed in the top level of this repository and named 
