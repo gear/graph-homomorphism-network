@@ -1,4 +1,4 @@
-from utils import nx2homg, tree_list, cycle_list,\
+from ghc.data_utils import nx2homg, tree_list, cycle_list,\
                   path_list, graph_type, hom_profile
 import homlib as hl
 import networkx as nx
@@ -8,8 +8,6 @@ from multiprocessing import Pool
 
 def hom_tree(F, G):
     """Specialized tree homomorphism in Python (serializable).
-    By: Takanori Maehara (maehara@prefield.com)
-
     Add `indexed` parameter to count for each index individually.
     """
     def rec(x, p):
@@ -69,7 +67,6 @@ def hom_tree_explabeled(F, G, node_tags=None, exp=np.e):
 
 def hom(F, G, f_is_tree=False, density=False):
     """Wrapper for the `hom` function in `homlib`
-    (https://github.com/spaghetti-source/homlib). 
     If `f_is_tree`, then use the Python implementation of tree. This one is 
     10 times slower than homlib but can be parallelize with `multiprocessing`.
     """
