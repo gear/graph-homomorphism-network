@@ -1,24 +1,9 @@
-attrs==20.3.0
-certifi==2020.12.5
-decorator==4.4.2
--e git+git@github.com:gear/graph-homomorphism-network.git@d32317084400d32954aba8956f800f92403ac176#egg=ghc
-homlib @ file:///home/gear/projects/graph-homomorphism-network/homlib
-iniconfig==1.1.1
-joblib==1.0.0
 networkx==2.5
 numpy==1.19.4
-packaging==20.8
-Pillow==8.1.0
-pluggy==0.13.1
-py==1.10.0
-pybind11==2.6.1
-pyparsing==2.4.7
 pytest==6.2.1
 scikit-learn==0.24.0
 scipy==1.5.4
-threadpoolctl==2.1.0
-toml==0.10.2
 torch==1.7.1
-torchaudio==0.7.2
-torchvision==0.8.2
 typing-extensions==3.7.4.3
+./homlib
+-e .

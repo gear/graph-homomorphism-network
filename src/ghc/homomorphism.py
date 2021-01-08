@@ -1,5 +1,5 @@
-from ghc.data_utils import nx2homg, tree_list, cycle_list,\
-                  path_list, graph_type, hom_profile
+from ghc.hom_utils import nx2homg, tree_list, cycle_list,\
+                          path_list, hom_profile
 import homlib as hl
 import networkx as nx
 import numpy as np

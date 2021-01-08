@@ -44,13 +44,6 @@ def load_precompute(dataset, hom_type, hom_size):
     return X
     
 
-def nx2gt(nxg):
-    """Simple function to convert s2v to graph-tool graph."""
-    gt = gtGraph(directed=nxg.is_directed())
-    gt.add_edge_list(nxg.edges())
-    return gt
-
-
 def nx2homg(nxg):
     """Convert nx graph to homlib graph format. Only 
     undirected graphs are supported. 
@@ -61,57 +54,6 @@ def nx2homg(nxg):
     for (u, v) in nxg.edges():
         G.addEdge(u,v)
     return G
-
-
-def tree_list(size=6, to_homlib=False):
-    """Generate nonisomorphic trees up to size `size`."""
-    t_list = [tree for i in range(2,size+1) for tree in \
-                       nx.generators.nonisomorphic_trees(i)]
-    if to_homlib:
-        t_list = [nx2homg(t) for t in t_list]
-    return t_list
-
-
-def cycle_list(size=6, to_homlib=False):
-    """Generate undirected cycles up to size `size`. Parallel
-    edges are not allowed."""
-    c_list = [nx.generators.cycle_graph(i) for i in range(2,size+1)]
-    if to_homlib:
-        c_list = [nx2homg(c) for c in c_list]
-    return c_list
-
-
-def hom_profile(size=5):
-    """Return a custom homomorphism profile.
-    Tree to size 5, cycle to size 5 by default."""
-    single_vertex = nx.Graph()
-    single_vertex.add_node(0)
-    tree_list = [tree for i in range(2,size+1) for tree in \
-                    nx.generators.nonisomorphic_trees(i)]
-    cycle_list = [nx.generators.cycle_graph(i) for i in range(3,size+1)]
-    f_list = [single_vertex]
-    f_list.extend(tree_list)
-    f_list.extend(cycle_list)
-    return f_list
-    
-
-def path_list(size=6, to_homlib=False):
-    """Generate undirected paths up to size `size`. Parallel
-    edges are not allowed."""
-    p_list = [nx.generators.path_graph(i) for i in range(2,size+1)]
-    if to_homlib:
-        p_list = [nx2homg(p) for p in p_list]
-    return p_list
-
-
-def graph_type(g):
-    if g.__module__ == 'homlib':
-        return 'hl'
-    elif g.__module__ == 'networkx.classes.graph':
-        return 'nx'
-    else:
-        raise TypeError("Unsupported graph type: {}".format(str(g)))
-    #TODO(N): Add for graph-tool type if needed.
 
 
 def _swap_edges(g, num_swap):
