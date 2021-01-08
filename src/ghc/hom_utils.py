@@ -5,7 +5,7 @@ from ghc.data_utils import nx2homg
 
 def tree_list(size=6, to_homlib=True, num_loops=0):
     """Generate nonisomorphic trees up to size `size`."""
-    t_list = [tree for i in range(2,size+1) for tree in \
+    t_list = [tree for i in range(2, size+1) for tree in \
                        nx.generators.nonisomorphic_trees(i)]
     if num_loops > 0:
         t_list = add_loops(t_list, num_loops)
@@ -17,7 +17,7 @@ def tree_list(size=6, to_homlib=True, num_loops=0):
 def cycle_list(size=6, to_homlib=True, num_loops=0):
     """Generate undirected cycles up to size `size`. Parallel
     edges are not allowed."""
-    c_list = [nx.generators.cycle_graph(i) for i in range(2,size+1)]
+    c_list = [nx.generators.cycle_graph(i) for i in range(2, size+1)]
     if num_loops > 0:
         t_list = add_loops(t_list, num_loops)
     if to_homlib:
@@ -28,7 +28,7 @@ def cycle_list(size=6, to_homlib=True, num_loops=0):
 def path_list(size=6, to_homlib=True, num_loops=0):
     """Generate undirected paths up to size `size`. Parallel
     edges are not allowed."""
-    p_list = [nx.generators.path_graph(i) for i in range(2,size+1)]
+    p_list = [nx.generators.path_graph(i) for i in range(2, size+1)]
     if num_loops > 0:
         p_list = add_loops(p_list, num_loops)
     if to_homlib:
@@ -55,7 +55,7 @@ def hom_profile(size=5):
     single_vertex.add_node(0)
     tree_list = [tree for i in range(2,size+1) for tree in \
                     nx.generators.nonisomorphic_trees(i)]
-    cycle_list = [nx.generators.cycle_graph(i) for i in range(3,size+1)]
+    cycle_list = [nx.generators.cycle_graph(i) for i in range(3, size+1)]
     f_list = [single_vertex]
     f_list.extend(tree_list)
     f_list.extend(cycle_list)

@@ -3,7 +3,6 @@ import pickle as pkl
 import networkx as nx
 import numpy as np
 import random
-import torch
 import os
 import random
 from sklearn.model_selection import StratifiedKFold
@@ -15,16 +14,18 @@ ALL_DATA = ["MUTAG", "PTC_MR", "IMDB-BINARY", "IMDB-MULTI", "NCI1", "PROTEINS",
             "ENZYMES", "NCI109", "BZR", "COX2", "BZR_MD", "COX2_MD"]
 
 
-def to_onehot(X, nmax=None):
-    """Convert a 1d numpy array to 2d one hot."""
+def to_onehot(y, nmax=None):
+    '''Convert a 1d numpy array to 2d one hot.'''
+    if y.size == 0:
+        return y
     if nmax is None:
-        nmax = X.max()+1
-    oh = np.zeros((X.size, nmax))
-    oh[np.arange(X.size), X] = 1
+        nmax = y.max()+1
+    oh = np.zeros((y.size, nmax))
+    oh[np.arange(y.size), y] = 1
     return oh
 
 
-def save_precompute(X, dataset, hom_type, hom_size):
+def save_precompute(X, dataset, hom_type, hom_size, dloc):
     dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
     tmp_str = "{}/{}/{}_{}_{}.pkl"
     with open(tmp_str.format(dataf,dataset,dataset,hom_type,hom_size), 
@@ -46,8 +47,7 @@ def load_precompute(dataset, hom_type, hom_size):
 
 def nx2homg(nxg):
     """Convert nx graph to homlib graph format. Only 
-    undirected graphs are supported. 
-    originally suggested by Takanori Maehara (@spagetti-source).
+    undirected graphs are supported.
     Note: This function expects nxg to have consecutive integer index."""
     n = nxg.number_of_nodes()
     G = hlGraph(n)

@@ -1,36 +1,13 @@
 import pytest
-from ghc import data_utils
+import numpy as np
+from ghc.data_utils import to_onehot
 
-"""
-@pytest.fixture
-def small_er():
-    '''Small Erdos-Renyi graph with 20 nodes.'''
-    g = utils.load_graph("./data/test/er_10_0.5.graph")
-    return g
 
-def test_load_graph(small_er):
-    assert small_er.number_of_nodes() == 20
-    assert small_er.number_of_edges() == 91
-
-def test_simple():
-    '''Simple assertion.'''
-    assert "homomorphism".capitalize() == "Homomorphism" 
-def test_raise():
-    '''Check if a certain exception is raised.'''
-    with pytest.raises(TypeError):
-        assert "1" + 1 == 2
-@pytest.fixture
-def empty_string():
-    '''An empty string'''
-    return ""
-@pytest.fixture
-def some_string():
-    '''An exclaimation'''
-    return "Graph homomorphism is fascinating!"
-def test_with_fixture1(empty_string, some_string):
-    assert len(empty_string) == 0
-    assert len(some_string) == 34
-def test_with_fixture2(some_string):
-    print(some_string)
-    assert some_string.capitalize() == some_string
-"""
+test_pairs = [(np.array([1,3,2]), np.array([[0,1,0,0],
+                                            [0,0,0,1],
+                                            [0,0,1,0]])),
+              (np.array([4]), np.array([0,0,0,0,1])),
+             ]
+@pytest.mark.parametrize("arr, one_hot", test_pairs)
+def test_one_hot(arr, one_hot):
+    assert np.all(to_onehot(arr) == one_hot)
