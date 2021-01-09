@@ -17,7 +17,7 @@ def cycle_list(size=6, num_loops=0):
     edges are not allowed."""
     c_list = [nx.generators.cycle_graph(i) for i in range(2, size+1)]
     if num_loops > 0:
-        t_list = add_loops(t_list, num_loops)
+        c_list = add_loops(c_list, num_loops)
     return c_list
 
     
