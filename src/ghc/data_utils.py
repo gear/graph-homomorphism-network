@@ -26,22 +26,17 @@ def to_onehot(y, nmax=None):
 
 
 def save_precompute(X, dataset, hom_type, hom_size, dloc):
-    dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
-    tmp_str = "{}/{}/{}_{}_{}.pkl"
-    with open(tmp_str.format(dataf,dataset,dataset,hom_type,hom_size), 
-              'wb') as f:
+    dataf = os.path.abspath(dloc)
+    tmp_str = "{}/{}_{}_{}.hom"
+    with open(tmp_str.format(dataf,dataset,hom_type,hom_size), 'wb') as f:
         pkl.dump(X, f)
 
 
-def load_precompute(dataset, hom_type, hom_size):
-    dataf = os.path.dirname(os.path.abspath(__file__))+"/data"
-    tmp_str = "{}/{}/{}_{}_{}.pkl"
-    try:
-        with open(tmp_str.format(dataf,dataset,dataset,hom_type,hom_size), 
-                  'rb') as f:
-            X = pkl.load(f)
-    except:
-        X = []
+def load_precompute(dataset, hom_type, hom_size, dloc):
+    dataf = os.path.abspath(dloc)
+    tmp_str = "{}/{}_{}_{}.hom"
+    with open(tmp_str.format(dataf,dataset,hom_type,hom_size), 'rb') as f:
+        X = pkl.load(f)
     return X
     
 
@@ -100,21 +95,26 @@ def gen_bipartite(num_graphs=200, perm_frac=0.0, p=0.2):
     return g_list, nclass
     
 
-def load_pickle(dname, root_dir="./data/"):
+def load_data(dname, dloc):
     """Load datasets"""
     X = None 
     y = None 
     graphs = None 
-    name = root_dir+dname
-    graphs = pkl.load(open(name+".graph", "rb"))
-    y = pkl.load(open(name+".y", "rb"))
+    name = os.path.abspath(os.path.join(dloc, dname))
+    with open(name+".graph", "rb") as f:
+        graphs = pkl.load(f) 
+    with open(name+".y", "rb") as f:
+        y = pkl.load(f) 
     if os.path.exists(name+".X"):
-        X = pkl.load(open(name+".X", "rb"))
+        with open(name+".X", "rb") as f:
+            X = pkl.load(f) 
     return graphs, X, y
 
 
+# TODO: remove this
 def separate_data(graph_list, seed, fold_idx):
-    assert 0 <= fold_idx and fold_idx < 10, "fold_idx must be from 0 to 9."
+    """10-folds cross validation splits"""
+    fold_idx = fold_idx % 10
     skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
 
     labels = [graph.label for graph in graph_list]
@@ -123,7 +123,4 @@ def separate_data(graph_list, seed, fold_idx):
         idx_list.append(idx)
     train_idx, test_idx = idx_list[fold_idx]
 
-    train_graph_list = [graph_list[i] for i in train_idx]
-    test_graph_list = [graph_list[i] for i in test_idx]
-
-    return train_graph_list, test_graph_list
+    return train_idx, test_idx

@@ -3,36 +3,30 @@ from itertools import combinations
 from ghc.data_utils import nx2homg
 
 
-def tree_list(size=6, to_homlib=True, num_loops=0):
+def tree_list(size=6, num_loops=0):
     """Generate nonisomorphic trees up to size `size`."""
     t_list = [tree for i in range(2, size+1) for tree in \
                        nx.generators.nonisomorphic_trees(i)]
     if num_loops > 0:
         t_list = add_loops(t_list, num_loops)
-    if to_homlib:
-        t_list = [nx2homg(t) for t in t_list]
     return t_list
 
 
-def cycle_list(size=6, to_homlib=True, num_loops=0):
+def cycle_list(size=6, num_loops=0):
     """Generate undirected cycles up to size `size`. Parallel
     edges are not allowed."""
     c_list = [nx.generators.cycle_graph(i) for i in range(2, size+1)]
     if num_loops > 0:
         t_list = add_loops(t_list, num_loops)
-    if to_homlib:
-        c_list = [nx2homg(c) for c in c_list]
     return c_list
 
     
-def path_list(size=6, to_homlib=True, num_loops=0):
+def path_list(size=6, num_loops=0):
     """Generate undirected paths up to size `size`. Parallel
     edges are not allowed."""
     p_list = [nx.generators.path_graph(i) for i in range(2, size+1)]
     if num_loops > 0:
         p_list = add_loops(p_list, num_loops)
-    if to_homlib:
-        p_list = [nx2homg(p) for p in p_list]
     return p_list
 
 

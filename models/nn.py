@@ -2,21 +2,17 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from time import time
-from utils import load_data, load_precompute, save_precompute, load_tud_data
-from utils import get_scaler
+from ghc.data_utils import load_data, load_precompute, save_precompute
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score
-from hom_conv import HNet 
-from data import torch_data
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from collections import defaultdict
 from torch.utils.data import DataLoader
-from logger import Logger
 
 
-parser = argparse.ArgumentParser("Homomorphism Network with tree profile.")
+parser = argparse.ArgumentParser("Graph Homomorphism Neural Network.")
 parser.add_argument("--dataset", type=str, help="Dataset name to run.")
 # Params for neural nets
 parser.add_argument("--max_tree_size", type=int, default=6, 
@@ -80,24 +76,5 @@ if __name__ == "__main__":
     # Dataloader 
     dataset = torch_data(args.dataset, num_folds=10)
 
-    # Logger
-    log = Logger(args)
-
     i = 1
-    #for tdset, vdset in dataset.folds():
-    #    net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
-    #    net.weights_init()
-    #    print("Fold {}...".format(i))
-    #    net, logger = train_val(net, tdset, vdset, args)
-    #    log.write_log(logger, i)
-    #    i+=1
     for tdset, vdset in dataset.folds():
-        net = HNet(dataset.fdim, dataset.nclass, args.hdim, args.max_tree_size)
-        net.test_init()
-        for m in net.hom_conv_modules:
-            m.weight.requires_grad = False 
-            m.bias.requires_grad = False
-        print("Fold {}...".format(i))
-        net, logger = train_val(net, tdset, vdset, args)
-        log.write_log(logger, i)
-        i+=1
