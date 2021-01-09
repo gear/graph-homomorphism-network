@@ -51,48 +51,48 @@ def nx2homg(nxg):
     return G
 
 
-def _swap_edges(g, num_swap):
-    edges = list(g.edges)
-    nodes = list(g.nodes)
-    upper = nodes[:int(g.number_of_nodes()/2)]
-    lower = nodes[int(g.number_of_nodes()/2):]
-    to_change = [random.choice(edges) for _ in range(num_swap)]
-    g.remove_edges_from(to_change)
-    for _ in range(num_swap):
-        u, v = 0, 0
-        if random.random() > 0.5:
-            sampler = upper
-        else:
-            sampler = lower
-        while u == v:
-            u = random.choice(sampler)
-            v = random.choice(sampler)
-        g.add_edge(u,v)
-    return g
+#def _swap_edges(g, num_swap):
+#    edges = list(g.edges)
+#    nodes = list(g.nodes)
+#    upper = nodes[:int(g.number_of_nodes()/2)]
+#    lower = nodes[int(g.number_of_nodes()/2):]
+#    to_change = [random.choice(edges) for _ in range(num_swap)]
+#    g.remove_edges_from(to_change)
+#    for _ in range(num_swap):
+#        u, v = 0, 0
+#        if random.random() > 0.5:
+#            sampler = upper
+#        else:
+#            sampler = lower
+#        while u == v:
+#            u = random.choice(sampler)
+#            v = random.choice(sampler)
+#        g.add_edge(u,v)
+#    return g
 
 
-def gen_bipartite(num_graphs=200, perm_frac=0.0, p=0.2):
-    """Generate bipartite and non-bipartite graphs."""
-    bipartites = []
-    nonbipartites = []
-    for i in range(num_graphs):
-        num_nodes = np.random.randint(40,101)
-        g = nx.bipartite.generators.random_graph(num_nodes,num_nodes, p)
-        if perm_frac > 0:
-            num_swap = int(perm_frac * g.number_of_edges())
-            g = _swap_edges(g, num_swap)
-        bipartites.append(g)
-        num_nodes = np.random.randint(40,101)
-        g = nx.generators.erdos_renyi_graph(2*num_nodes, p/2)
-        nonbipartites.append(g)  # Not 100% fix later
+#def gen_bipartite(num_graphs=200, perm_frac=0.0, p=0.2):
+#    """Generate bipartite and non-bipartite graphs."""
+#    bipartites = []
+#    nonbipartites = []
+#    for i in range(num_graphs):
+#        num_nodes = np.random.randint(40,101)
+#        g = nx.bipartite.generators.random_graph(num_nodes,num_nodes, p)
+#        if perm_frac > 0:
+#            num_swap = int(perm_frac * g.number_of_edges())
+#            g = _swap_edges(g, num_swap)
+#        bipartites.append(g)
+#        num_nodes = np.random.randint(40,101)
+#        g = nx.generators.erdos_renyi_graph(2*num_nodes, p/2)
+#        nonbipartites.append(g)  # Not 100% fix later
 
-    g_list = []
-    for i, g in enumerate(bipartites+nonbipartites):
-        g = S2VGraph(g, y[i], node_tags=None, 
-                     node_features=None, graph_feature=None)
-        g_list.append(g)
-    nclass = 2
-    return g_list, nclass
+#    g_list = []
+#    for i, g in enumerate(bipartites+nonbipartites):
+#        g = S2VGraph(g, y[i], node_tags=None, 
+#                     node_features=None, graph_feature=None)
+#        g_list.append(g)
+#    nclass = 2
+#    return g_list, nclass
     
 
 def load_data(dname, dloc):
