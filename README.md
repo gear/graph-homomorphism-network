@@ -20,6 +20,19 @@ https://drive.google.com/file/d/15w7UyqG_MjCqdRL2fA87m7-vanjddKNh/view?usp=shari
 ```
 and extract to `data/`. For example MUTAG dataset should have: `data/MUTAG.graph`, `data/MUTAG.X`, and `data/MUTAG.y`. 
 
+## Quick run with ipython
+```
+from ghc.homomorphism import hom 
+from ghc.data_utils import load_data
+from ghc.hom_utils import tree_list
+
+graphs, X, y = load_data("MUTAG", "./data")
+trees = tree_list(4, num_loops=1)
+
+# right hom
+print(hom(graphs[0], trees[-1]))
+```
+
 ## Run experiments
 Experiment scripts are placed in the top level of this repository and named 
 by the machine learning model. In general, a 10-fold CV score is reported.
