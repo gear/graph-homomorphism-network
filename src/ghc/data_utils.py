@@ -10,8 +10,8 @@ from homlib import Graph as hlGraph
 
 
 ALL_DATA = ["MUTAG", "PTC_MR", "IMDB-BINARY", "IMDB-MULTI", "NCI1", "PROTEINS",
-            "REDDIT-BINARY", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", "COLLAB", "DD",
-            "ENZYMES", "NCI109", "BZR", "COX2", "BZR_MD", "COX2_MD"]
+            "REDDIT-BINARY", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", "COLLAB",
+            "DD", "ENZYMES", "NCI109", "BZR", "COX2", "BZR_MD", "COX2_MD"]
 
 
 def to_onehot(y, nmax=None):
@@ -38,10 +38,10 @@ def load_precompute(dataset, hom_type, hom_size, dloc):
     with open(tmp_str.format(dataf,dataset,hom_type,hom_size), 'rb') as f:
         X = pkl.load(f)
     return X
-    
+
 
 def nx2homg(nxg):
-    """Convert nx graph to homlib graph format. Only 
+    """Convert nx graph to homlib graph format. Only
     undirected graphs are supported.
     Note: This function expects nxg to have consecutive integer index."""
     n = nxg.number_of_nodes()
@@ -93,21 +93,21 @@ def nx2homg(nxg):
 #        g_list.append(g)
 #    nclass = 2
 #    return g_list, nclass
-    
+
 
 def load_data(dname, dloc):
     """Load datasets"""
-    X = None 
-    y = None 
-    graphs = None 
+    X = None
+    y = None
+    graphs = None
     name = os.path.abspath(os.path.join(dloc, dname))
     with open(name+".graph", "rb") as f:
-        graphs = pkl.load(f) 
+        graphs = pkl.load(f)
     with open(name+".y", "rb") as f:
-        y = pkl.load(f) 
+        y = pkl.load(f)
     if os.path.exists(name+".X"):
         with open(name+".X", "rb") as f:
-            X = pkl.load(f) 
+            X = pkl.load(f)
     return graphs, X, y
 
 
