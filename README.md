@@ -1,3 +1,5 @@
+![Test](https://github.com/gear/graph-homomorphism-network/workflows/Test/badge.svg)
+
 # Graph Homomorphism Convolution
 Proof of concept for Graph Homomorphism Convolution.
 http://arxiv.org/abs/2005.01214 (ICML'20)
