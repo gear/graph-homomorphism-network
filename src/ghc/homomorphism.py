@@ -1,9 +1,8 @@
-from ghc.hom_utils import nx2homg, tree_list, cycle_list,\
+from ghc.utils.hom import nx2homg, tree_list, cycle_list,\
                           path_list, hom_profile
 import homlib as hl
 import networkx as nx
 import numpy as np
-from multiprocessing import Pool
 
 
 def hom_tree(F, G):

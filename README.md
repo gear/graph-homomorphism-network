@@ -23,8 +23,8 @@ and extract to `data/`. For example MUTAG dataset should have: `data/MUTAG.graph
 ## Quick run with ipython
 ```
 from ghc.homomorphism import hom 
-from ghc.data_utils import load_data
-from ghc.hom_utils import tree_list
+from ghc.utils.data import load_data
+from ghc.utils.hom import tree_list
 
 graphs, X, y = load_data("MUTAG", "./data")
 trees = tree_list(4, num_loops=1)

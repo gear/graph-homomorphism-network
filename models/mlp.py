@@ -44,7 +44,8 @@ if __name__ == "__main__":
     import torch.optim as optim
     from torch.utils.data import TensorDataset, DataLoader
     from ghc.homomorphism import get_hom_profile
-    from ghc.data_utils import load_data, load_precompute, save_precompute
+    from ghc.utils.data import load_data, load_precompute, save_precompute
+    from ghc.utils.ml import accuracy
 
     hom_types = get_hom_profile(None)
 
@@ -111,19 +112,3 @@ if __name__ == "__main__":
         loss_train.backward()
         optimizer.step()
         return loss_train.item(), acc_train.item()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
