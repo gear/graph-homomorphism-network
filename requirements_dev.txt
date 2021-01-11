@@ -6,5 +6,6 @@ scipy==1.5.4
 torch==1.7.1
 torchvision==0.8.2
 typing-extensions==3.7.4.3
+tqdm==4.56.0
 ./homlib
 -e .

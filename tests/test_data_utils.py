@@ -1,7 +1,7 @@
 import os
 import pytest
 import numpy as np
-from ghc.data_utils import to_onehot, save_precompute, load_precompute
+from ghc.utils.data import to_onehot, save_precompute, load_precompute
 
 
 test_pairs = [(np.array([1,3,2]), np.array([[0,1,0,0],

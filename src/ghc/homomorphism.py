@@ -113,13 +113,6 @@ def cycle_profile(G, size=6, density=False, **kwargs):
     return [hom(c, G, density=density) for c in c_list]
 
 
-def tree_cycle_profile(G, size=6, density=False, **kwargs):
-    """Run profile for both tree and cycle."""
-    tree_pf = tree_profile(G, size, density)
-    cycle_pf = cycle_profile(G, size, density)
-    return tree_pf + cycle_pf
-
-
 def labeled_tree_profile(G, size=6, node_tags=None, **kwargs):
     """Run profile for labeled trees."""
     t_list = tree_list(size)
@@ -144,7 +137,7 @@ def homomorphism_profile(G, size=6, node_tags=None, **kwargs):
 def get_hom_profile(f_str):
     if f_str == "labeled_tree":
         return labeled_tree_profile
-    elif f_str == "explabeled_tree":
+    elif f_str == "labeled_tree_exp":
         return explabeled_tree_profile
     elif f_str == "tree":
         return tree_profile
@@ -153,8 +146,9 @@ def get_hom_profile(f_str):
     elif f_str == "cycle":
         return cycle_profile
     elif f_str == "tree+cycle":
-        return tree_cycle_profile
+        return homomorphism_profile
     elif f_str == "atlas":
         return atlas_profile
-    else:
-        return homomorphism_profile
+    else:  # Return all posible options
+        return ["labeled_tree", "labeled_tree_exp",
+                "tree", "path", "cycle", "tree+cycle", "atlas"]

@@ -1,6 +1,6 @@
 import pytest
 import networkx as nx
-from ghc.hom_utils import tree_list, cycle_list, path_list, add_loops
+from ghc.utils.hom import tree_list, cycle_list, path_list, add_loops
 
 
 def empty():

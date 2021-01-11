@@ -1,6 +1,6 @@
-import networkx as nx 
+import networkx as nx
 from itertools import combinations
-from ghc.data_utils import nx2homg
+from ghc.utils.data import nx2homg
 
 
 def tree_list(size=6, num_loops=0):
@@ -20,7 +20,7 @@ def cycle_list(size=6, num_loops=0):
         c_list = add_loops(c_list, num_loops)
     return c_list
 
-    
+
 def path_list(size=6, num_loops=0):
     """Generate undirected paths up to size `size`. Parallel
     edges are not allowed."""
@@ -42,9 +42,9 @@ def add_loops(graph_lists, num_loops):
     return g_list
 
 
-def hom_profile(size=5):
+def hom_profile(size=6):
     """Return a custom homomorphism profile.
-    Tree to size 5, cycle to size 5 by default."""
+    Tree to size 6, cycle to size 5 by default."""
     single_vertex = nx.Graph()
     single_vertex.add_node(0)
     tree_list = [tree for i in range(2,size+1) for tree in \
