@@ -111,6 +111,15 @@ def load_data(dname, dloc):
     return graphs, X, y
 
 
+def load_folds(dname, dloc):
+    """Load preassigned 10-folds splits for each datasets"""
+    splits = None
+    name = os.path.abspath(os.path.join(dloc, dname))
+    with open(name+".folds", "rb") as f:
+        splits = pkl.load(f)
+    return splits
+
+
 # TODO: remove this
 def separate_data(graph_list, seed, fold_idx):
     """10-folds cross validation splits"""
