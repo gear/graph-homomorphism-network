@@ -20,7 +20,8 @@ This package is not dependent on `torch-geometric` but we will use
 ```
 https://drive.google.com/file/d/15w7UyqG_MjCqdRL2fA87m7-vanjddKNh/view?usp=sharing
 ```
-and extract to `data/`. For example MUTAG dataset should have: `data/MUTAG.graph`, `data/MUTAG.X`, and `data/MUTAG.y`. 
+and extract to `data/`. For example MUTAG dataset should have: `data/MUTAG.graph`
+, `data/MUTAG.X`, `data/MUTAG.y`, and `data/MUTAG.folds`. 
 
 ## Quick run with ipython
 ```
@@ -40,9 +41,12 @@ Experiment scripts are placed in the top level of this repository and named
 by the machine learning model. In general, a 10-fold CV score is reported.
 For example,
 ```
-python svm.py --data mutag --hom tree --size 8 
-python svm.py --data mutag --hom feature_tree --size 8 
+python models/mlp.py --data mutag --hom tree --size 6 
+python models/mlp.py --data mutag --hom labeled_tree --size 6
 ```
+The 10-fold splits for MUTAG, COLLAB, IMDBBINARY, IMDBMULTI, NCI1, PROTEINS, and
+PTC are taken from `weihua916/powerful-gnns`. The others are generated with 
+`sklearn.model_selection.StratifiedKFold` at random seed 0.
 
 Cite us as:
 ```
