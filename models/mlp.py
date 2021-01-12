@@ -32,7 +32,7 @@ class MLP(nn.Module):
             if self.dp is not None and i < len(self.fcs)-1:
                 x = self.dp(x)
                 x = F.relu(x)
-        return x
+        return F.log_softmax(x)
 
 
 if __name__ == "__main__":
