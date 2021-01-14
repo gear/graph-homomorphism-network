@@ -48,6 +48,8 @@ The 10-fold splits for MUTAG, COLLAB, IMDBBINARY, IMDBMULTI, NCI1, PROTEINS, and
 PTC are taken from `weihua916/powerful-gnns`. The others are generated with 
 `sklearn.model_selection.StratifiedKFold` at random seed 0.
 
+Note: CPU run will cause some segmentation fault upon script exit.
+
 Cite us as:
 ```
 @InProceedings{
