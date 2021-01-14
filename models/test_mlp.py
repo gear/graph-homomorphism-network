@@ -11,7 +11,7 @@ def test_mlp():
     assert model(x).size() == (3, 2)
     assert model.in_dim == 4
     assert model.out_dim == 2
-    assert len([*model.parameters()]) == 15
+    assert len([*model.parameters()]) == 7
 
     model = MLP(4, 2, [], dp=0.2)
     x = torch.tensor([[1,0,0,0],
@@ -20,4 +20,3 @@ def test_mlp():
     assert model(x).size() == (3, 2)
     assert model.in_dim == 4
     assert model.out_dim == 2
-    # assert len([*model.parameters()]) == 15
