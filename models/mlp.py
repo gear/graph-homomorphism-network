@@ -94,6 +94,8 @@ if __name__ == "__main__":
         save_precompute(homX, args.data.upper(), args.hom_type, args.hom_size,
                         os.path.join(args.dloc, "precompute"))
     tensorX = torch.Tensor(homX).float().to(device)
+    print(tensorX.max(0, keepdim=False)[0])
+    tensorX = tensorX / (tensorX.max(0, keepdim=False)[0] + 0.5)
     tensory = torch.Tensor(y).flatten().long().to(device)
     tensorX.requires_grad_(requires_grad=False)
     tensory.requires_grad_(requires_grad=False)
