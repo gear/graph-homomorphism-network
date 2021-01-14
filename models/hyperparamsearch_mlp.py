@@ -40,6 +40,7 @@ parser.add_argument('--seed', type=int, default=0)
 parser.add_argument('--epochs', type=int, default=5000)
 parser.add_argument('--hids', type=int, nargs='+', default=[64, 64, 64])
 parser.add_argument('--cuda', action="store_true", default=False)
+parser.add_argument('--verbose', action="store_true", default=False)
 parser.add_argument('--gpu_id', type=int, default=0)
 parser.add_argument("--log_period", type=int, default=500)
 args = parser.parse_args()
@@ -96,7 +97,7 @@ def test(m, idx, checkpt_file):
 #### Run for one config of hyper-params to get a 10-folds scores
 def cv_score(lr, wd, dropout, patience, logger):
     scores = []
-    for split in splits:
+    for split in tqdm(splits, desc="10-folds"):
         model = MLP(tensorX.size(-1), int(tensory.max()+1), args.hids,
                     dp=dropout).to(device)
         opt_config = [{'params': model.parameters(),
@@ -108,17 +109,19 @@ def cv_score(lr, wd, dropout, patience, logger):
         idx_test = torch.Tensor(idx_test).long().to(device)
     
         checkpt_file = 'checkpoints/'+uuid.uuid4().hex[:4]+'-'+args.data+'.pt'
-        print(device_id, checkpt_file)
+        if args.verbose:
+            print(device_id, checkpt_file)
         c = 0
         best = 0
         best_epoch = 0
         acc = 0
         for epoch in range(args.epochs):
             loss_train, acc_train = train(model, optimizer, idx_train)
-            if args.log_period!=-1 and ((epoch+1)%args.log_period == 0 or epoch == 0):
-                print('Epoch:{:04d}'.format(epoch+1),
-                    'loss:{:.3f}'.format(loss_train),
-                    'acc:{:.2f}'.format(acc_train*100))
+            if args.verbose:
+                if args.log_period!=-1 and ((epoch+1)%args.log_period == 0 or epoch == 0):
+                    print('Epoch:{:04d}'.format(epoch+1),
+                        'loss:{:.3f}'.format(loss_train),
+                        'acc:{:.2f}'.format(acc_train*100))
             if acc_train > best:
                 best = acc_train
                 best_epoch = epoch
