@@ -3,7 +3,7 @@ checkpoints/
 precompute/
 
 # Ignore log files
-# *.csv
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
