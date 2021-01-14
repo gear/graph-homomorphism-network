@@ -3,6 +3,7 @@ checkpoints/
 precompute/
 
 # Ignore log files
+logs/
 *.csv
 
 # Byte-compiled / optimized / DLL files
