@@ -32,15 +32,10 @@ class MLP(nn.Module):
         else:
             self.fcs.append(nn.Linear(in_dim, out_dim, bias=False))
         self.fcs = nn.ModuleList(self.fcs)
-        self.normalizations = nn.ModuleList([
-            nn.LayerNorm(in_dim),
-            *[nn.LayerNorm(h) for h in hiddens]
-        ])
         self.dp = nn.Dropout(dp, inplace=True)
 
     def forward(self, x):
         for i, fc in enumerate(self.fcs):
-            x = self.normalizations[i](x)
             x = fc(x)
             if self.dp is not None and i < len(self.fcs)-1:
                 x = self.dp(x)
@@ -59,11 +54,11 @@ if __name__ == "__main__":
     parser.add_argument('--hom_size', type=int, default=6)
     parser.add_argument('--dloc', type=str, default="./data")
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--epochs', type=int, default=2000)
+    parser.add_argument('--epochs', type=int, default=5000)
     parser.add_argument('--bs', type=int, default=32)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--wd', type=float, default=0.00005)
-    parser.add_argument('--hids', type=int, nargs='+', default=[64, 64])
+    parser.add_argument('--hids', type=int, nargs='+', default=[64, 64, 64])
     parser.add_argument('--dropout', type=float, default=0.5)
     parser.add_argument('--patience', type=int, default=500)
     parser.add_argument('--cuda', action="store_true", default=False)
@@ -94,7 +89,6 @@ if __name__ == "__main__":
         save_precompute(homX, args.data.upper(), args.hom_type, args.hom_size,
                         os.path.join(args.dloc, "precompute"))
     tensorX = torch.Tensor(homX).float().to(device)
-    print(tensorX.max(0, keepdim=False)[0])
     tensorX = tensorX / (tensorX.max(0, keepdim=False)[0] + 0.5)
     tensory = torch.Tensor(y).flatten().long().to(device)
     tensorX.requires_grad_(requires_grad=False)
