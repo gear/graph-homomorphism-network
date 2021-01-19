@@ -5,6 +5,7 @@ import numpy as np
 import random
 import os
 import random
+from itertools import repeat
 from sklearn.model_selection import StratifiedKFold
 from homlib import Graph as hlGraph
 
@@ -120,16 +121,44 @@ def load_folds(dname, dloc):
     return splits
 
 
-# TODO: remove this
-def separate_data(graph_list, seed, fold_idx):
-    """10-folds cross validation splits"""
-    fold_idx = fold_idx % 10
-    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
+#def drop_nodes(graphs, X, y, per_graph=2, rate=0.1):
+#    generated_graphs = []
+#    for i, g in enumerate(graphs):
+#        n = g.number_of_nodes()
+#        for _ in range(per_graph):
+#            ng = g.copy()
+#            droplist = np.random.choice(ng.nodes(),
+#                                        size=int(rate*n),
+#                                        replace=False)
+#            ng.remove_nodes_from(droplist)
+#            #### Reindexing
+#            mapping = dict([(i, j) for j, i in enumerate(ng.nodes())])
 
-    labels = [graph.label for graph in graph_list]
-    idx_list = []
-    for idx in skf.split(np.zeros(len(labels)), labels):
-        idx_list.append(idx)
-    train_idx, test_idx = idx_list[fold_idx]
 
-    return train_idx, test_idx
+def drop_nodes(graph, x, rate=1):
+    #### Remove nodes
+    n = graph.number_of_nodes()
+    ng = graph.copy()
+    if type(rate) is float:
+        num_drop = int(rate*n)
+    else:
+        num_drop = rate
+    droplist = np.random.choice(ng.nodes(), size=num_drop, replace=False)
+    ng.remove_nodes_from(droplist)
+    #### Reindex to consecutive integers
+    mapping = dict([(i, j) for j, i in enumerate(ng.nodes())])
+    ng = nx.relabel_nodes(ng, mapping=mapping)
+    newx = x[list(mapping.keys()), :]
+    return ng, newx
+
+
+def augment_data(graphs, X, y, samples_per_graph, rate=1):
+    new_graphs = []
+    new_X = []
+    new_y = [[ny] for dupy in y for ny in repeat(dupy, samples_per_graph)]
+    for g, x in zip(graphs, X):
+        gen_data = [drop_nodes(g, x, rate) for _ in range(samples_per_graph)]
+        gen_graphs, gen_x = zip(*gen_data)
+        new_graphs.extend(gen_graphs)
+        new_X.extend(gen_x)
+    return new_graphs, np.array(new_X, dtype=object), np.array(new_y)

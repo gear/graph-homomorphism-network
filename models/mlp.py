@@ -12,8 +12,8 @@ from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 from tqdm import tqdm
 from ghc.homomorphism import get_hom_profile
-from ghc.utils.data import load_data, load_precompute,\
-                               save_precompute, load_folds
+from ghc.utils.data import load_data, load_precompute, save_precompute,\
+                           load_folds, augment_data
 from ghc.utils.ml import accuracy
 import sys
 
@@ -53,6 +53,9 @@ if __name__ == "__main__":
     parser.add_argument('--data', default='MUTAG')
     parser.add_argument('--hom_type', type=str, choices=hom_types)
     parser.add_argument('--hom_size', type=int, default=6)
+    parser.add_argument('--drop_nodes', action="store_true", default=False)
+    parser.add_argument('--drop_nodes_rate', type=int, default=1)
+    parser.add_argument('--gen_per_graph', type=int, default=1)
     parser.add_argument('--dloc', type=str, default="./data")
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--epochs', type=int, default=5000)
@@ -74,8 +77,9 @@ if __name__ == "__main__":
         torch.cuda.manual_seed(args.seed)
         device_id = "cuda:"+str(args.gpu_id)
     device = torch.device(device_id)
-    #### Setup checkpoints
+    #### Setup checkpoints and precompute
     os.makedirs("./checkpoints/", exist_ok=True)
+    os.makedirs(os.path.join(args.dloc, "precompute"), exist_ok=True)
     #### Load data and compute homomorphism
     graphs, X, y = load_data(args.data.upper(), args.dloc)
     splits = load_folds(args.data.upper(), args.dloc)
@@ -90,18 +94,32 @@ if __name__ == "__main__":
                 for g in tqdm(graphs, desc="Hom")]
         save_precompute(homX, args.data.upper(), args.hom_type, args.hom_size,
                         os.path.join(args.dloc, "precompute"))
+    #### If data augmentation is enabled
+    if args.drop_nodes:
+        gen_graphs, gen_X, gen_y = augment_data(graphs, X, y,
+                                                args.gen_per_graph,
+                                                rate=args.drop_nodes_rate)
+        gen_hom_X = [hom_func(g, size=args.hom_size,
+                              density=False,
+                              node_tags=gen_X)\
+                     for g in tqdm(gen_graphs, desc="Hom (aug)")]
+        tensor_gen_X = torch.Tensor(gen_hom_X).float().to(device)
+        scaler = (tensor_gen_X.max(0, keepdim=True)[0] + 0.5)
+        tensor_gen_X = tensor_gen_X / scaler
+        tensor_gen_y = torch.Tensor(gen_y).flatten().long().to(device)
+    else:
+        tensor_gen_X = None
+        tensor_gen_y = None
     tensorX = torch.Tensor(homX).float().to(device)
     tensorX = tensorX / (tensorX.max(0, keepdim=False)[0] + 0.5)
     tensory = torch.Tensor(y).flatten().long().to(device)
-    tensorX.requires_grad_(requires_grad=False)
-    tensory.requires_grad_(requires_grad=False)
     #### Train and Test functions
-    def train(m, o, idx):
+    def train(m, o, idx, tX, ty):
         m.train()
         o.zero_grad()
-        output = m(tensorX)
-        acc_train = accuracy(output[idx], tensory[idx])
-        loss_train = F.nll_loss(output[idx], tensory[idx])
+        output = m(tX)
+        acc_train = accuracy(output[idx], ty[idx])
+        loss_train = F.nll_loss(output[idx], ty[idx])
         loss_train.backward()
         o.step()
         return loss_train.item(), acc_train.item()
@@ -125,7 +143,14 @@ if __name__ == "__main__":
         idx_train, idx_test = split
         idx_train = torch.Tensor(idx_train).long().to(device)
         idx_test = torch.Tensor(idx_test).long().to(device)
-
+        if args.drop_nodes:
+            expander = lambda k: [k*args.gen_per_graph+i for i in\
+                                  range(args.gen_per_graph)]
+            idx_train_gen = torch.Tensor([i for j in idx_train for\
+                                          i in expander(j)])
+            idx_train_gen = torch.Tensor(idx_train_gen).long().to(device)
+        else:
+            idx_train_gen = None
         checkpt_file = 'checkpoints/'+uuid.uuid4().hex[:4]+'-'+args.data+'.pt'
         if args.verbose:
             print(device_id, checkpt_file)
@@ -134,7 +159,11 @@ if __name__ == "__main__":
         best_epoch = 0
         acc = 0
         for epoch in range(args.epochs):
-            loss_train, acc_train = train(model, optimizer, idx_train)
+            if args.drop_nodes:
+                _, _ = train(model, optimizer, idx_train_gen,
+                             tensor_gen_X, tensor_gen_y)
+            loss_train, acc_train = train(model, optimizer, idx_train,
+                                          tensorX, tensory)
             if args.verbose:
                 if (epoch+1)%args.log_period == 0 or epoch == 0:
                     print('Epoch:{:04d}'.format(epoch+1),
