@@ -90,8 +90,8 @@ if __name__ == "__main__":
                         args.hom_size,
                         os.path.join(args.dloc, "precompute"))
     except FileNotFoundError:
-        homX = [hom_func(g, size=args.hom_size, density=False, node_tags=X)\
-                for g in tqdm(graphs, desc="Hom")]
+        homX = [hom_func(g, size=args.hom_size, density=False, node_tags=X[i])\
+                for i, g in enumerate(tqdm(graphs, desc="Hom"))]
         save_precompute(homX, args.data.upper(), args.hom_type, args.hom_size,
                         os.path.join(args.dloc, "precompute"))
     #### If data augmentation is enabled
