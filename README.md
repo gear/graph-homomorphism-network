@@ -41,8 +41,8 @@ Experiment scripts are placed in the top level of this repository and named
 by the machine learning model. In general, a 10-fold CV score is reported.
 For example,
 ```
-python models/mlp.py --data mutag --hom tree --size 6 
-python models/mlp.py --data mutag --hom labeled_tree --size 6
+python models/mlp.py --data mutag --hom_type tree --hom_size 6 
+python models/mlp.py --data mutag --hom_type labeled_tree --hom_size 6
 ```
 The 10-fold splits for MUTAG, COLLAB, IMDBBINARY, IMDBMULTI, NCI1, PROTEINS, and
 PTC are taken from `weihua916/powerful-gnns`. The others are generated with 
