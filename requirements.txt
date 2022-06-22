@@ -1,5 +1,5 @@
 networkx==2.5
-numpy==1.19.4
+numpy==1.22.0
 scipy==1.5.4
 torch==1.7.1
 torchvision==0.8.2
